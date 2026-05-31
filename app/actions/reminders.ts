@@ -6,11 +6,24 @@ import { reminders } from '@/lib/db/schema'
 import { and, eq, desc } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { sendReminderEmail } from '@/lib/email'
 
 async function getUserId() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) throw new Error('Unauthorized')
   return session.user.id
+}
+
+async function getUserEmail() {
+  const session = await auth.api.getSession({ headers: await headers() })
+  if (!session?.user?.email) throw new Error('User email not found')
+  return session.user.email
+}
+
+async function getUserName() {
+  const session = await auth.api.getSession({ headers: await headers() })
+  if (!session?.user?.name) throw new Error('User name not found')
+  return session.user.name
 }
 
 export async function getReminders() {
@@ -29,6 +42,7 @@ export async function createReminder(data: {
   type?: string
   taskId?: number
   examId?: number
+  sendEmail?: boolean
 }) {
   const userId = await getUserId()
   const [reminder] = await db
@@ -38,6 +52,26 @@ export async function createReminder(data: {
       userId,
     })
     .returning()
+
+  // Send email notification if enabled
+  if (data.sendEmail) {
+    try {
+      const userEmail = await getUserEmail()
+      const userName = await getUserName()
+      await sendReminderEmail({
+        to: userEmail,
+        name: userName || 'User',
+        title: data.title,
+        reminderDate: data.reminderDate,
+        reminderTime: data.reminderTime,
+        type: data.type,
+      })
+    } catch (error) {
+      console.error('Failed to send reminder email:', error)
+      // Don't fail the reminder creation if email fails
+    }
+  }
+
   revalidatePath('/')
   return reminder
 }
