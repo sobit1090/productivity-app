@@ -4,13 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
-  CheckSquare,
-  BookOpen,
-  BarChart3,
-  Calendar,
-  Clock,
-  FileText,
-  TrendingUp,
+  CheckSquare, BookOpen, BarChart3, Calendar,
+  Clock, FileText, TrendingUp, Settings,
 } from 'lucide-react'
 
 const navItems = [
@@ -27,7 +22,7 @@ export function DashboardSidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="hidden border-r border-border bg-card md:block">
+    <aside className="hidden border-r border-border bg-card md:flex md:flex-col md:justify-between">
       <nav className="flex flex-col gap-2 p-4">
         {navItems.map(({ href, label, icon: Icon }) => (
           <Link
@@ -45,6 +40,21 @@ export function DashboardSidebar() {
           </Link>
         ))}
       </nav>
+      {/* Settings at the bottom */}
+      <div className="p-4 border-t border-border">
+        <Link
+          href="/settings"
+          className={cn(
+            'flex items-center gap-3 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+            pathname === '/settings'
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+          )}
+        >
+          <Settings className="h-5 w-5" />
+          Settings
+        </Link>
+      </div>
     </aside>
   )
 }

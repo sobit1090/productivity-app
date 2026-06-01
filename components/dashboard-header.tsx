@@ -3,20 +3,12 @@
 import { signOut, useSession } from '@/lib/auth-client'
 import { useRouter, usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import {
-  LogOut, Menu, BarChart3, CheckSquare, BookOpen,
-  Calendar, Clock, TrendingUp, FileText, User,
-} from 'lucide-react'
+import { LogOut, Menu, BarChart3, CheckSquare, BookOpen, Calendar, Clock, TrendingUp, FileText, Settings } from 'lucide-react'
 import { useState } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
-} from '@/components/ui/sheet'
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 const navItems = [
@@ -27,6 +19,7 @@ const navItems = [
   { href: '/study-sessions', label: 'Study Sessions', icon: Clock },
   { href: '/analytics', label: 'Analytics', icon: TrendingUp },
   { href: '/notes', label: 'Notes', icon: FileText },
+  { href: '/settings', label: 'Settings', icon: Settings },
 ]
 
 export function DashboardHeader() {
@@ -34,7 +27,6 @@ export function DashboardHeader() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const { data: session } = useSession()
-
   const user = session?.user
   const initials = user?.name
     ? user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
@@ -50,12 +42,11 @@ export function DashboardHeader() {
     <header className="border-b border-border bg-card">
       <div className="flex items-center justify-between px-4 py-3 md:px-8">
         <div className="flex items-center gap-3">
-          {/* Mobile Menu */}
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <button className="p-2 md:hidden text-foreground hover:bg-accent rounded-md">
                 <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle navigation menu</span>
+                <span className="sr-only">Toggle menu</span>
               </button>
             </SheetTrigger>
             <SheetContent side="left" className="w-[280px] bg-card p-4">
@@ -96,7 +87,6 @@ export function DashboardHeader() {
           </Link>
         </div>
 
-        {/* Desktop: User menu */}
         <div className="flex items-center gap-3">
           {user && (
             <span className="hidden md:block text-sm text-muted-foreground">
@@ -114,13 +104,20 @@ export function DashboardHeader() {
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-52">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col gap-1">
                   {user?.name && <p className="text-sm font-medium">{user.name}</p>}
                   {user?.email && <p className="text-xs text-muted-foreground truncate">{user.email}</p>}
                 </div>
               </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/settings" className="cursor-pointer">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleSignOut}
