@@ -7,6 +7,7 @@ import { Trash2, CheckCircle2, Circle, AlertCircle } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { deleteTask, updateTask } from '@/app/actions/tasks'
 import { cn } from '@/lib/utils'
+import { EditTaskDialog } from '@/components/edit-task-dialog'
 
 interface TaskCardProps {
   id: number
@@ -15,6 +16,8 @@ interface TaskCardProps {
   priority: string
   status: string
   dueDate?: Date
+  subjectId?: number
+  subjects?: { id: number; name: string; color: string | null }[]
   onDelete?: () => void
 }
 
@@ -31,6 +34,8 @@ export function TaskCard({
   priority,
   status,
   dueDate,
+  subjectId,
+  subjects = [],
   onDelete,
 }: TaskCardProps) {
   const isOverdue = status !== 'completed' && dueDate && new Date(dueDate) < new Date()
@@ -51,9 +56,11 @@ export function TaskCard({
     <Card className={cn('p-4 border transition-colors', isOverdue && 'border-destructive bg-destructive/5')}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-1 items-start gap-3">
+          {/* Complete toggle */}
           <button
             onClick={handleToggleStatus}
-            className="mt-1 flex-shrink-0 text-muted-foreground hover:text-foreground"
+            className="mt-1 flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+            title={status === 'completed' ? 'Mark as pending' : 'Mark as completed'}
           >
             {status === 'completed' ? (
               <CheckCircle2 className="h-5 w-5 text-primary" />
@@ -61,7 +68,8 @@ export function TaskCard({
               <Circle className="h-5 w-5" />
             )}
           </button>
-          <div className="flex-1">
+
+          <div className="flex-1 min-w-0">
             <h3
               className={cn(
                 'font-semibold',
@@ -71,12 +79,12 @@ export function TaskCard({
               {title}
             </h3>
             {description && (
-              <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+              <p className="mt-1 text-sm text-muted-foreground whitespace-pre-wrap break-words">
+                {description}
+              </p>
             )}
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Badge
-                className={priorityColors[priority as keyof typeof priorityColors]}
-              >
+              <Badge className={priorityColors[priority as keyof typeof priorityColors]}>
                 {priority}
               </Badge>
               {isOverdue && (
@@ -86,20 +94,41 @@ export function TaskCard({
                 </Badge>
               )}
               {dueDate && (
-                <span className={cn('text-xs', isOverdue ? 'text-destructive font-semibold' : 'text-muted-foreground')}>
+                <span
+                  className={cn(
+                    'text-xs',
+                    isOverdue ? 'text-destructive font-semibold' : 'text-muted-foreground'
+                  )}
+                >
                   Due {formatDistanceToNow(new Date(dueDate), { addSuffix: true })}
                 </span>
               )}
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="ghost" size="icon" onClick={handleDelete}>
-            <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-1 shrink-0">
+          <EditTaskDialog
+            id={id}
+            title={title}
+            description={description}
+            priority={priority}
+            dueDate={dueDate}
+            subjects={subjects}
+            subjectId={subjectId}
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleDelete}
+            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            title="Delete task"
+          >
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       </div>
     </Card>
   )
 }
-

@@ -1,9 +1,6 @@
 import { DashboardHeader } from '@/components/dashboard-header'
 import { DashboardSidebar } from '@/components/dashboard-sidebar'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
-import { getTasks, createTask } from '@/app/actions/tasks'
+import { getTasks } from '@/app/actions/tasks'
 import { getSubjects } from '@/app/actions/subjects'
 import { TaskCard } from '@/components/task-card'
 import { CreateTaskForm } from '@/components/create-task-form'
@@ -48,6 +45,8 @@ export default async function TasksPage() {
                       priority={task.priority || 'medium'}
                       status={task.status || 'pending'}
                       dueDate={task.dueDate ? new Date(task.dueDate) : undefined}
+                      subjectId={task.subjectId || undefined}
+                      subjects={userSubjects}
                     />
                   ))
                 ) : (
@@ -70,6 +69,8 @@ export default async function TasksPage() {
                       priority={task.priority || 'medium'}
                       status={task.status || 'pending'}
                       dueDate={task.dueDate ? new Date(task.dueDate) : undefined}
+                      subjectId={task.subjectId || undefined}
+                      subjects={userSubjects}
                     />
                   ))}
                 </div>

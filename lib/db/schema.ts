@@ -91,6 +91,13 @@ export const exams = pgTable('exams', {
   admitCardLink: text('admitCardLink'),
   admitCardStatus: text('admitCardStatus').default('pending'),
   status: text('status').default('scheduled'),
+  // Result tracking
+  appearedInExam: boolean('appearedInExam').default(false),
+  resultStatus: text('resultStatus').default('not_appeared'), // not_appeared | awaited | declared
+  resultDate: timestamp('resultDate'),          // expected / actual result date
+  resultLink: text('resultLink'),              // official result URL
+  score: text('score'),                        // marks / rank / grade
+  resultNotes: text('resultNotes'),            // any personal notes about result
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })

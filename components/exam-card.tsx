@@ -7,6 +7,8 @@ import { Trash2, Calendar, Clock, MapPin, AlertCircle, FileDown } from 'lucide-r
 import { format } from 'date-fns'
 import { deleteExam } from '@/app/actions/exams'
 import { cn } from '@/lib/utils'
+import { EditExamDialog } from '@/components/edit-exam-dialog'
+import { ExamResultSidebar } from '@/components/exam-result-sidebar'
 
 interface ExamCardProps {
   id: number
@@ -15,10 +17,20 @@ interface ExamCardProps {
   examDate: Date
   duration?: number
   location?: string
+  syllabus?: string
   status: string
   formDeadline?: Date
   admitCardLink?: string
   admitCardStatus?: string
+  subjectId?: number
+  subjects?: { id: number; name: string; color: string | null }[]
+  // Result tracking
+  appearedInExam?: boolean
+  resultStatus?: string
+  resultDate?: Date | null
+  resultLink?: string
+  score?: string
+  resultNotes?: string
   onDelete?: () => void
 }
 
@@ -41,10 +53,19 @@ export function ExamCard({
   examDate,
   duration,
   location,
+  syllabus,
   status,
   formDeadline,
   admitCardLink,
   admitCardStatus,
+  subjectId,
+  subjects = [],
+  appearedInExam,
+  resultStatus,
+  resultDate,
+  resultLink,
+  score,
+  resultNotes,
   onDelete,
 }: ExamCardProps) {
   const isFormExpired = formDeadline && new Date(formDeadline) < new Date()
@@ -59,44 +80,48 @@ export function ExamCard({
   return (
     <Card className="p-4 border transition-colors">
       <div className="space-y-3">
+        {/* Header: title + status badge */}
         <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <h3 className="font-semibold">{title}</h3>
             {description && (
-              <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+              <p className="mt-1 text-sm text-muted-foreground whitespace-pre-wrap break-words">
+                {description}
+              </p>
             )}
           </div>
-          <Badge
-            className={statusColors[status as keyof typeof statusColors]}
-          >
+          <Badge className={statusColors[status as keyof typeof statusColors]}>
             {status}
           </Badge>
         </div>
 
+        {/* Details */}
         <div className="space-y-2 text-sm border-t pt-2 mt-2">
           <div className="flex items-center gap-2 text-muted-foreground">
-            <Calendar className="h-4 w-4" />
+            <Calendar className="h-4 w-4 shrink-0" />
             {format(new Date(examDate), 'MMM dd, yyyy h:mm a')}
           </div>
           {duration && (
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Clock className="h-4 w-4" />
+              <Clock className="h-4 w-4 shrink-0" />
               {duration} minutes
             </div>
           )}
           {location && (
             <div className="flex items-center gap-2 text-muted-foreground">
-              <MapPin className="h-4 w-4" />
+              <MapPin className="h-4 w-4 shrink-0" />
               {location}
             </div>
           )}
-          
+
           {/* Government Exam trackers */}
           {formDeadline && (
             <div className="flex items-center gap-2 text-muted-foreground">
-              <AlertCircle className={cn('h-4 w-4', isFormExpired ? 'text-destructive' : 'text-amber-500')} />
+              <AlertCircle
+                className={cn('h-4 w-4 shrink-0', isFormExpired ? 'text-destructive' : 'text-amber-500')}
+              />
               <span className={cn(isFormExpired ? 'text-destructive font-semibold' : 'text-foreground/80')}>
-                {isFormExpired ? 'Apply closed: ' : 'Apply by: '} 
+                {isFormExpired ? 'Apply closed: ' : 'Apply by: '}
                 {format(new Date(formDeadline), 'MMM dd, yyyy')}
               </span>
             </div>
@@ -104,7 +129,7 @@ export function ExamCard({
 
           {admitCardStatus && (
             <div className="flex items-center gap-2 text-muted-foreground">
-              <FileDown className="h-4 w-4" />
+              <FileDown className="h-4 w-4 shrink-0" />
               <span>Admit Card:</span>
               {admitCardLink ? (
                 <a
@@ -116,25 +141,86 @@ export function ExamCard({
                   Download ({admitCardStatus})
                 </a>
               ) : (
-                <Badge className={cn('text-[10px] px-1.5 py-0', admitStatusColors[admitCardStatus as keyof typeof admitStatusColors])}>
+                <Badge
+                  className={cn(
+                    'text-[10px] px-1.5 py-0',
+                    admitStatusColors[admitCardStatus as keyof typeof admitStatusColors]
+                  )}
+                >
                   {admitCardStatus}
                 </Badge>
               )}
             </div>
           )}
+
+          {/* Result quick-info (if already logged) */}
+          {appearedInExam && resultStatus && resultStatus !== 'not_appeared' && (
+            <div className="mt-2 rounded-md bg-muted/40 px-3 py-2 text-xs space-y-0.5">
+              {resultStatus === 'declared' && score && (
+                <p className="font-semibold text-foreground">Score: {score}</p>
+              )}
+              {resultDate && (
+                <p className="text-muted-foreground">
+                  {resultStatus === 'declared' ? 'Declared' : 'Expected'}:{' '}
+                  {format(new Date(resultDate), 'MMM dd, yyyy')}
+                </p>
+              )}
+              {resultLink && (
+                <a
+                  href={resultLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline block"
+                >
+                  View Result →
+                </a>
+              )}
+            </div>
+          )}
         </div>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleDelete}
-          className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Delete Exam
-        </Button>
+        {/* Action row */}
+        <div className="flex items-center justify-between gap-2 border-t pt-3">
+          {/* Result sidebar trigger */}
+          <ExamResultSidebar
+            examId={id}
+            examTitle={title}
+            appearedInExam={appearedInExam}
+            resultStatus={resultStatus}
+            resultDate={resultDate}
+            resultLink={resultLink}
+            score={score}
+            resultNotes={resultNotes}
+          />
+
+          <div className="flex items-center gap-1">
+            <EditExamDialog
+              id={id}
+              title={title}
+              description={description}
+              examDate={examDate}
+              duration={duration}
+              location={location}
+              syllabus={syllabus}
+              status={status}
+              formDeadline={formDeadline}
+              admitCardLink={admitCardLink}
+              admitCardStatus={admitCardStatus}
+              subjects={subjects}
+              subjectId={subjectId}
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleDelete}
+              className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              title="Delete exam"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
     </Card>
   )
 }
-

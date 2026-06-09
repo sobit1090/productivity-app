@@ -33,6 +33,12 @@ export async function createExam(data: {
   formDeadline?: Date
   admitCardLink?: string
   admitCardStatus?: string
+  appearedInExam?: boolean
+  resultStatus?: string
+  resultDate?: Date
+  resultLink?: string
+  score?: string
+  resultNotes?: string
 }) {
   const userId = await getUserId()
   const [exam] = await db
@@ -60,6 +66,12 @@ export async function updateExam(
     formDeadline?: Date
     admitCardLink?: string
     admitCardStatus?: string
+    appearedInExam?: boolean
+    resultStatus?: string
+    resultDate?: Date
+    resultLink?: string
+    score?: string
+    resultNotes?: string
   }
 ) {
   const userId = await getUserId()
@@ -69,6 +81,28 @@ export async function updateExam(
     .where(and(eq(exams.id, id), eq(exams.userId, userId)))
     .returning()
   revalidatePath('/')
+  return exam
+}
+
+export async function updateExamResult(
+  id: number,
+  data: {
+    appearedInExam: boolean
+    resultStatus: string
+    resultDate?: Date
+    resultLink?: string
+    score?: string
+    resultNotes?: string
+  }
+) {
+  const userId = await getUserId()
+  const [exam] = await db
+    .update(exams)
+    .set({ ...data, status: data.appearedInExam ? 'completed' : undefined })
+    .where(and(eq(exams.id, id), eq(exams.userId, userId)))
+    .returning()
+  revalidatePath('/')
+  revalidatePath('/exams')
   return exam
 }
 
