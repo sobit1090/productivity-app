@@ -470,16 +470,10 @@ function MoneyOnboarding() {
     color: string
   }
 
-  // Initial templates matching the user's setup
-  const [cards, setCards] = useState<OnboardingCard[]>([
-    { name: 'Flipkart Axis Bank', creditLimit: '19000', billingCycleDay: 13, dueDateDay: 26, dueDaysAfterBill: null, color: '#f97316' },
-    { name: 'Roar Bank', creditLimit: '5000', billingCycleDay: 1, dueDateDay: null, dueDaysAfterBill: 15, color: '#8b5cf6' }
-  ])
+  // Start with empty lists so user is prompted to add their own custom accounts
+  const [cards, setCards] = useState<OnboardingCard[]>([])
 
-  const [banks, setBanks] = useState([
-    { name: 'Kotak Bank', balance: '0', color: '#ef4444' },
-    { name: 'Indie Bank', balance: '0', color: '#06b6d4' }
-  ])
+  const [banks, setBanks] = useState<{ name: string; balance: string; color: string }[]>([])
 
   const [cashBalance, setCashBalance] = useState('0')
 
@@ -500,8 +494,9 @@ function MoneyOnboarding() {
     color: '#10b981'
   })
 
-  const [showAddCardForm, setShowAddCardForm] = useState(false)
-  const [showAddBankForm, setShowAddBankForm] = useState(false)
+  // Set forms to open by default so inputs are displayed immediately
+  const [showAddCardForm, setShowAddCardForm] = useState(true)
+  const [showAddBankForm, setShowAddBankForm] = useState(true)
 
   const handleAddCard = () => {
     if (!newCard.name || !newCard.creditLimit) {
