@@ -156,6 +156,47 @@ export async function updateAccount(
   return account
 }
 
+export async function createAccount(data: {
+  name: string
+  type: 'credit_card' | 'bank_account' | 'cash'
+  balance: string
+  creditLimit?: string | null
+  billingCycleDay?: number | null
+  dueDateDay?: number | null
+  dueDaysAfterBill?: number | null
+  color?: string
+  icon?: string
+}) {
+  const userId = await getUserId()
+  const [account] = await db
+    .insert(moneyAccounts)
+    .values({
+      userId,
+      name: data.name,
+      type: data.type,
+      balance: data.balance,
+      creditLimit: data.creditLimit || null,
+      billingCycleDay: data.billingCycleDay || null,
+      dueDateDay: data.dueDateDay || null,
+      dueDaysAfterBill: data.dueDaysAfterBill || null,
+      color: data.color || '#6366f1',
+      icon: data.icon || 'credit-card',
+    })
+    .returning()
+  revalidatePath('/money')
+  return account
+}
+
+export async function deleteAccount(id: number) {
+  const userId = await getUserId()
+  // Mark as inactive instead of deleting to preserve transaction history
+  await db
+    .update(moneyAccounts)
+    .set({ isActive: false, updatedAt: new Date() })
+    .where(and(eq(moneyAccounts.id, id), eq(moneyAccounts.userId, userId)))
+  revalidatePath('/money')
+}
+
 // ─── Transactions ──────────────────────────────────────────────────────────────
 
 export async function getTransactions(filters?: {

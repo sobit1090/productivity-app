@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Loader2, IndianRupee, Pencil } from 'lucide-react'
+import { X, Loader2, IndianRupee, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { updateAccount } from '@/app/actions/money'
+import { updateAccount, deleteAccount } from '@/app/actions/money'
 
 type Account = {
   id: number
@@ -28,6 +28,7 @@ export function EditAccountDialog({
   onClose: () => void
 }) {
   const [loading, setLoading] = useState(false)
+  const [name, setName] = useState(account.name)
   const [balance, setBalance] = useState(account.balance ?? '0')
   const [creditLimit, setCreditLimit] = useState(account.creditLimit ?? '')
   const [billingCycleDay, setBillingCycleDay] = useState(String(account.billingCycleDay ?? ''))
@@ -37,9 +38,14 @@ export function EditAccountDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!name.trim()) {
+      toast.error('Name cannot be empty')
+      return
+    }
     setLoading(true)
     try {
       await updateAccount(account.id, {
+        name,
         balance,
         creditLimit: creditLimit || undefined,
         billingCycleDay: billingCycleDay ? parseInt(billingCycleDay) : undefined,
@@ -47,13 +53,30 @@ export function EditAccountDialog({
         dueDaysAfterBill: dueDaysAfterBill ? parseInt(dueDaysAfterBill) : null,
         color,
       })
-      toast.success(`${account.name} updated!`)
+      toast.success(`${name} updated!`)
       onClose()
       window.location.reload() // Refresh to show updated data
     } catch {
       toast.error('Failed to update account')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    const typeLabel = account.type === 'credit_card' ? 'credit card' : 'bank account'
+    if (confirm(`Are you sure you want to delete this ${typeLabel} "${account.name}"? This will preserve transactions but remove the account from your lists.`)) {
+      setLoading(true)
+      try {
+        await deleteAccount(account.id)
+        toast.success(`${account.name} deleted!`)
+        onClose()
+        window.location.reload()
+      } catch {
+        toast.error('Failed to delete account')
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
@@ -73,6 +96,19 @@ export function EditAccountDialog({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Account Name */}
+          <div>
+            <Label htmlFor="acc-name">Account Name</Label>
+            <Input
+              id="acc-name"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="e.g. HDFC Credit Card, SBI Savings"
+              className="mt-1"
+              required
+            />
+          </div>
+
           {/* Balance */}
           <div>
             <Label htmlFor="acc-balance">
@@ -171,13 +207,28 @@ export function EditAccountDialog({
             </div>
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Changes'}
-            </Button>
+          <div className="space-y-2 pt-2">
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading} className="flex-1">
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Changes'}
+              </Button>
+            </div>
+            
+            {/* Delete button (except for 'cash' type account to avoid breaking core dashboard layout) */}
+            {account.type !== 'cash' && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={loading}
+                className="w-full gap-2 mt-2"
+              >
+                <Trash2 className="h-4 w-4" /> Delete Account
+              </Button>
+            )}
           </div>
         </form>
       </div>

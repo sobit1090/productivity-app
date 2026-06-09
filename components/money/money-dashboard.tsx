@@ -26,6 +26,7 @@ import { AddTransactionDialog } from './add-transaction-dialog'
 import { EditTransactionDialog } from './edit-transaction-dialog'
 import { MarkPaidDialog } from './mark-paid-dialog'
 import { EditAccountDialog } from './edit-account-dialog'
+import { AddAccountDialog } from './add-account-dialog'
 import { deleteTransaction, markBillPaid, saveCustomAccounts } from '@/app/actions/money'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 
@@ -955,6 +956,7 @@ export function MoneyDashboard({
   const router = useRouter()
   const [transactions, setTransactions] = useState(initialTransactions)
   const [showAdd, setShowAdd] = useState(false)
+  const [showAddAccount, setShowAddAccount] = useState(false)
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null)
   const [editingTxn, setEditingTxn] = useState<Transaction | null>(null)
   const [filterAccount, setFilterAccount] = useState<string>('all')
@@ -1038,9 +1040,14 @@ export function MoneyDashboard({
           </h1>
           <p className="text-muted-foreground text-sm mt-0.5">Track every rupee across all your accounts</p>
         </div>
-        <Button onClick={() => { setSelectedAccount(null); setShowAdd(true) }} className="gap-2">
-          <Plus className="h-4 w-4" /> Add Transaction
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setShowAddAccount(true)} variant="outline" className="gap-2">
+            <Plus className="h-4 w-4" /> Add Account
+          </Button>
+          <Button onClick={() => { setSelectedAccount(null); setShowAdd(true) }} className="gap-2">
+            <Plus className="h-4 w-4" /> Add Transaction
+          </Button>
+        </div>
       </div>
 
       {/* Summary Row */}
@@ -1253,6 +1260,13 @@ export function MoneyDashboard({
           defaultAccount={selectedAccount}
           onClose={() => { setShowAdd(false); setSelectedAccount(null) }}
           onAdded={txn => setTransactions(prev => [txn as Transaction, ...prev])}
+        />
+      )}
+
+      {/* Add Account Dialog */}
+      {showAddAccount && (
+        <AddAccountDialog
+          onClose={() => setShowAddAccount(false)}
         />
       )}
 
