@@ -1,8 +1,20 @@
 'use client'
 
+import { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { Trash2, CheckCircle2, Circle, AlertCircle } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { deleteTask, updateTask } from '@/app/actions/tasks'
@@ -38,6 +50,7 @@ export function TaskCard({
   subjects = [],
   onDelete,
 }: TaskCardProps) {
+  const [isDeleting, setIsDeleting] = useState(false)
   const isOverdue = status !== 'completed' && dueDate && new Date(dueDate) < new Date()
 
   const handleToggleStatus = async () => {
@@ -46,9 +59,12 @@ export function TaskCard({
   }
 
   const handleDelete = async () => {
-    if (confirm('Are you sure you want to delete this task?')) {
+    setIsDeleting(true)
+    try {
       await deleteTask(id)
       onDelete?.()
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -118,15 +134,37 @@ export function TaskCard({
             subjects={subjects}
             subjectId={subjectId}
           />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleDelete}
-            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            title="Delete task"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                title="Delete task"
+                disabled={isDeleting}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Task?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  "<span className="font-medium text-foreground">{title}</span>" will be permanently deleted. This cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {isDeleting ? 'Deleting…' : 'Delete'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </Card>
