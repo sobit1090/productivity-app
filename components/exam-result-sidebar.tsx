@@ -42,16 +42,19 @@ const resultStatusConfig = {
     label: 'Not Appeared',
     icon: HelpCircle,
     color: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+    border: 'border-slate-200 dark:border-slate-700',
   },
   awaited: {
     label: 'Result Awaited',
     icon: Clock3,
-    color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+    color: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+    border: 'border-amber-200 dark:border-amber-800',
   },
   declared: {
     label: 'Result Declared',
     icon: CheckCircle2,
-    color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    color: 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    border: 'border-green-200 dark:border-green-800',
   },
 }
 
@@ -70,7 +73,9 @@ export function ExamResultSidebar({
   const [appeared, setAppeared] = useState(appearedInExam)
   const [status, setStatus] = useState(resultStatus)
 
-  const currentConfig = resultStatusConfig[status as keyof typeof resultStatusConfig] ?? resultStatusConfig.not_appeared
+  const currentConfig =
+    resultStatusConfig[status as keyof typeof resultStatusConfig] ??
+    resultStatusConfig.not_appeared
   const StatusIcon = currentConfig.icon
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -101,7 +106,7 @@ export function ExamResultSidebar({
           variant="outline"
           size="sm"
           className={cn(
-            'gap-2 text-xs font-medium border transition-all',
+            'gap-2 text-xs font-medium border transition-all rounded-lg',
             appeared
               ? 'border-primary/40 text-primary hover:bg-primary/10'
               : 'hover:border-primary/40 hover:text-primary'
@@ -123,21 +128,39 @@ export function ExamResultSidebar({
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-        <SheetHeader className="pb-4 border-b">
-          <SheetTitle className="flex items-center gap-2">
-            <ClipboardCheck className="h-5 w-5 text-primary" />
-            Result Tracking
-          </SheetTitle>
-          <SheetDescription className="text-sm font-medium text-foreground/80 line-clamp-2">
-            {examTitle}
-          </SheetDescription>
-        </SheetHeader>
+      {/* ── Sidebar panel ─────────────────────────────────────── */}
+      <SheetContent
+        side="right"
+        className="
+          !inset-y-3 !right-3 !h-[calc(100vh-1.5rem)]
+          w-full sm:max-w-md
+          !rounded-2xl
+          border border-border
+          shadow-2xl
+          overflow-y-auto
+          p-0
+        "
+      >
+        {/* Gradient header */}
+        <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 pt-8 pb-6 rounded-t-2xl border-b border-border">
+          <SheetHeader className="p-0 gap-1">
+            <SheetTitle className="flex items-center gap-2.5 text-base">
+              <span className="flex items-center justify-center h-8 w-8 rounded-full bg-primary/15 text-primary shrink-0">
+                <ClipboardCheck className="h-4 w-4" />
+              </span>
+              Result Tracking
+            </SheetTitle>
+            <SheetDescription className="text-sm font-medium text-foreground/70 line-clamp-2 pl-10">
+              {examTitle}
+            </SheetDescription>
+          </SheetHeader>
+        </div>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+        {/* Form body */}
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
 
           {/* Did you appear? */}
-          <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+          <div className="rounded-xl border bg-muted/30 p-4 space-y-3">
             <p className="text-sm font-semibold">Did you appear in this exam?</p>
             <div className="flex gap-3">
               <button
@@ -147,7 +170,7 @@ export function ExamResultSidebar({
                   if (status === 'not_appeared') setStatus('awaited')
                 }}
                 className={cn(
-                  'flex-1 rounded-lg border-2 py-3 text-sm font-medium transition-all',
+                  'flex-1 rounded-xl border-2 py-3 text-sm font-medium transition-all',
                   appeared
                     ? 'border-primary bg-primary/10 text-primary'
                     : 'border-border hover:border-primary/50 text-muted-foreground'
@@ -162,7 +185,7 @@ export function ExamResultSidebar({
                   setStatus('not_appeared')
                 }}
                 className={cn(
-                  'flex-1 rounded-lg border-2 py-3 text-sm font-medium transition-all',
+                  'flex-1 rounded-xl border-2 py-3 text-sm font-medium transition-all',
                   !appeared
                     ? 'border-destructive bg-destructive/10 text-destructive'
                     : 'border-border hover:border-destructive/50 text-muted-foreground'
@@ -173,7 +196,7 @@ export function ExamResultSidebar({
             </div>
           </div>
 
-          {/* Result Status — only if appeared */}
+          {/* Result Status */}
           {appeared && (
             <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
               <label className="text-sm font-semibold flex items-center gap-2">
@@ -190,7 +213,7 @@ export function ExamResultSidebar({
                       type="button"
                       onClick={() => setStatus(s)}
                       className={cn(
-                        'rounded-lg border-2 py-3 px-2 text-xs font-medium transition-all flex flex-col items-center gap-1.5',
+                        'rounded-xl border-2 py-3 px-2 text-xs font-medium transition-all flex flex-col items-center gap-1.5',
                         status === s
                           ? 'border-primary bg-primary/10 text-primary'
                           : 'border-border hover:border-primary/40 text-muted-foreground'
@@ -217,13 +240,11 @@ export function ExamResultSidebar({
                 name="resultDate"
                 type="datetime-local"
                 defaultValue={
-                  resultDate
-                    ? new Date(resultDate).toISOString().slice(0, 16)
-                    : ''
+                  resultDate ? new Date(resultDate).toISOString().slice(0, 16) : ''
                 }
-                className="text-sm"
+                className="text-sm rounded-xl"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground pl-1">
                 {status === 'awaited'
                   ? 'When do you expect the result to be announced?'
                   : 'When was the result officially declared?'}
@@ -243,7 +264,7 @@ export function ExamResultSidebar({
                 name="score"
                 placeholder="e.g. 87/100, Rank 234, Grade A"
                 defaultValue={score ?? ''}
-                className="text-sm"
+                className="text-sm rounded-xl"
               />
             </div>
           )}
@@ -261,7 +282,7 @@ export function ExamResultSidebar({
                 type="url"
                 placeholder="https://board.gov.in/results/..."
                 defaultValue={resultLink ?? ''}
-                className="text-sm"
+                className="text-sm rounded-xl"
               />
             </div>
           )}
@@ -279,34 +300,36 @@ export function ExamResultSidebar({
                 rows={3}
                 placeholder="How did the exam go? Any observations..."
                 defaultValue={resultNotes ?? ''}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           )}
 
-          {/* Current Summary Banner */}
+          {/* Status summary banner */}
           {appeared && (
             <div
               className={cn(
-                'rounded-lg p-3 flex items-center gap-3 text-sm',
-                currentConfig.color
+                'rounded-xl border p-3.5 flex items-center gap-3 text-sm font-medium',
+                currentConfig.color,
+                currentConfig.border
               )}
             >
               <StatusIcon className="h-4 w-4 shrink-0" />
-              <span className="font-medium">{currentConfig.label}</span>
+              <span>{currentConfig.label}</span>
             </div>
           )}
 
-          <div className="flex gap-3 pt-2">
+          {/* Actions */}
+          <div className="flex gap-3 pt-1 pb-2">
             <Button
               type="button"
               variant="outline"
-              className="flex-1"
+              className="flex-1 rounded-xl"
               onClick={() => setOpen(false)}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading} className="flex-1">
+            <Button type="submit" disabled={isLoading} className="flex-1 rounded-xl">
               {isLoading ? 'Saving...' : 'Save Result Info'}
             </Button>
           </div>
