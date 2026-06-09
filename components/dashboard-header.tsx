@@ -3,7 +3,7 @@
 import { signOut, useSession } from '@/lib/auth-client'
 import { useRouter, usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { LogOut, Menu, BarChart3, CheckSquare, BookOpen, Calendar, Clock, TrendingUp, FileText, Settings } from 'lucide-react'
+import { LogOut, Menu, BarChart3, CheckSquare, BookOpen, Calendar, Clock, TrendingUp, FileText, Settings, Wallet } from 'lucide-react'
 import { useState } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
@@ -19,6 +19,7 @@ const navItems = [
   { href: '/study-sessions', label: 'Study Sessions', icon: Clock },
   { href: '/analytics', label: 'Analytics', icon: TrendingUp },
   { href: '/notes', label: 'Notes', icon: FileText },
+  { href: '/money', label: 'Money', icon: Wallet },
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
 
