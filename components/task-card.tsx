@@ -51,6 +51,7 @@ export function TaskCard({
   onDelete,
 }: TaskCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
   const isOverdue = status !== 'completed' && dueDate && new Date(dueDate) < new Date()
 
   const handleToggleStatus = async () => {
@@ -71,7 +72,7 @@ export function TaskCard({
   return (
     <Card className={cn('p-4 border transition-colors', isOverdue && 'border-destructive bg-destructive/5')}>
       <div className="flex items-start justify-between gap-4">
-        <div className="flex flex-1 items-start gap-3">
+        <div className="flex flex-1 items-start gap-3 min-w-0">
           {/* Complete toggle */}
           <button
             onClick={handleToggleStatus}
@@ -87,15 +88,25 @@ export function TaskCard({
 
           <div className="flex-1 min-w-0">
             <h3
+              onClick={() => setIsExpanded(!isExpanded)}
               className={cn(
-                'font-semibold',
-                status === 'completed' && 'line-through text-muted-foreground'
+                'font-semibold cursor-pointer select-none hover:text-primary transition-colors',
+                status === 'completed' && 'line-through text-muted-foreground',
+                isExpanded ? 'break-words whitespace-normal' : 'truncate'
               )}
+              title="Click to expand/collapse"
             >
               {title}
             </h3>
             {description && (
-              <p className="mt-1 text-sm text-muted-foreground whitespace-pre-wrap break-words">
+              <p
+                onClick={() => setIsExpanded(!isExpanded)}
+                className={cn(
+                  'mt-1 text-sm text-muted-foreground cursor-pointer select-none',
+                  isExpanded ? 'whitespace-pre-wrap break-words' : 'line-clamp-2 break-words'
+                )}
+                title="Click to expand/collapse"
+              >
                 {description}
               </p>
             )}
@@ -135,36 +146,16 @@ export function TaskCard({
             subjectId={subjectId}
           />
 
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                title="Delete task"
-                disabled={isDeleting}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Task?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  "<span className="font-medium text-foreground">{title}</span>" will be permanently deleted. This cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDelete}
-                  className="bg-destructive text-white hover:bg-destructive/90"
-                >
-                  {isDeleting ? 'Deleting…' : 'Delete'}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            title="Delete task"
+            disabled={isDeleting}
+            onClick={handleDelete}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     </Card>

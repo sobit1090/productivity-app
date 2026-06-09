@@ -1019,7 +1019,6 @@ export function MoneyDashboard({
     + parseFloat(cashAccount?.balance ?? '0')
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Delete this transaction?')) return
     try {
       await deleteTransaction(id)
       setTransactions(prev => prev.filter(t => t.id !== id))
