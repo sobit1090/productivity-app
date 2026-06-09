@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
   CheckSquare, BookOpen, BarChart3, Calendar,
-  Clock, FileText, TrendingUp, Settings,
+  Clock, FileText, TrendingUp, Settings, Wallet,
 } from 'lucide-react'
 
 const navItems = [
@@ -16,7 +16,9 @@ const navItems = [
   { href: '/study-sessions', label: 'Study Sessions', icon: Clock },
   { href: '/analytics', label: 'Analytics', icon: TrendingUp },
   { href: '/notes', label: 'Notes', icon: FileText },
+  { href: '/money', label: 'Money', icon: Wallet },
 ]
+
 
 export function DashboardSidebar() {
   const pathname = usePathname()

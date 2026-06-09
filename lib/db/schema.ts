@@ -151,3 +151,56 @@ export const notes = pgTable('notes', {
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
+
+// --- Money Management tables ---------------------------------------------------
+
+export const moneyAccounts = pgTable('money_accounts', {
+  id: serial('id').primaryKey(),
+  userId: text('userId').notNull(),
+  name: text('name').notNull(),
+  type: text('type').notNull(), // 'credit_card' | 'bank_account' | 'cash'
+  balance: decimal('balance', { precision: 12, scale: 2 }).default('0'),
+  creditLimit: decimal('creditLimit', { precision: 12, scale: 2 }),
+  billingCycleDay: integer('billingCycleDay'),   // day of month bill generates
+  dueDateDay: integer('dueDateDay'),             // fixed day of month due (Axis: 26)
+  dueDaysAfterBill: integer('dueDaysAfterBill'), // N days after bill date (Roar: 15)
+  color: text('color').default('#6366f1'),
+  icon: text('icon').default('credit-card'),
+  isActive: boolean('isActive').notNull().default(true),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const moneyTransactions = pgTable('money_transactions', {
+  id: serial('id').primaryKey(),
+  userId: text('userId').notNull(),
+  accountId: integer('accountId').notNull().references(() => moneyAccounts.id, { onDelete: 'cascade' }),
+  amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),
+  type: text('type').notNull().default('debit'), // 'debit' | 'credit'
+  category: text('category').notNull().default('other'),
+  // food | shopping | travel | bills | entertainment | healthcare | fuel | education | other
+  merchant: text('merchant'),
+  description: text('description'),
+  notes: text('notes'),
+  transactionDate: timestamp('transactionDate').notNull().defaultNow(),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const ccBills = pgTable('cc_bills', {
+  id: serial('id').primaryKey(),
+  userId: text('userId').notNull(),
+  accountId: integer('accountId').notNull().references(() => moneyAccounts.id, { onDelete: 'cascade' }),
+  billMonth: integer('billMonth').notNull(),   // 1-12
+  billYear: integer('billYear').notNull(),
+  totalAmount: decimal('totalAmount', { precision: 12, scale: 2 }).notNull().default('0'),
+  dueDate: timestamp('dueDate').notNull(),
+  isPaid: boolean('isPaid').notNull().default(false),
+  paidDate: timestamp('paidDate'),
+  paidFromAccountId: integer('paidFromAccountId'),
+  paidAmount: decimal('paidAmount', { precision: 12, scale: 2 }),
+  notes: text('notes'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
