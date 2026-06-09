@@ -93,7 +93,7 @@ export function EditExamDialog({
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
         <DialogHeader>
           <DialogTitle>Edit Exam</DialogTitle>
           <DialogDescription>Update exam details below.</DialogDescription>
