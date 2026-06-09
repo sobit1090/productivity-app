@@ -1032,19 +1032,18 @@ export function MoneyDashboard({
   return (
     <div className="p-4 md:p-6 space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Wallet className="h-6 w-6 text-primary" />
             Money Manager
           </h1>
-          <p className="text-muted-foreground text-sm mt-0.5">Track every rupee across all your accounts</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => setShowAddAccount(true)} variant="outline" className="gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-2">
+          <Button onClick={() => setShowAddAccount(true)} variant="outline" className="gap-2 w-full sm:w-auto">
             <Plus className="h-4 w-4" /> Add Account
           </Button>
-          <Button onClick={() => { setSelectedAccount(null); setShowAdd(true) }} className="gap-2">
+          <Button onClick={() => { setSelectedAccount(null); setShowAdd(true) }} className="gap-2 w-full sm:w-auto">
             <Plus className="h-4 w-4" /> Add Transaction
           </Button>
         </div>
