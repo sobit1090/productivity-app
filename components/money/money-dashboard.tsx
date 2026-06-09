@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { format, differenceInDays, isAfter, isBefore, addDays } from 'date-fns'
 import {
   CreditCard, Landmark, Banknote, TrendingUp, TrendingDown,
   Plus, Filter, Search, AlertCircle, CheckCircle2, Clock,
   Wallet, ArrowUpRight, ArrowDownLeft, MoreHorizontal,
-  ChevronDown, Pencil, Trash2, X
+  ChevronDown, Pencil, Trash2, X, Sparkles, Check, ChevronRight, ChevronLeft
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -25,7 +26,7 @@ import { AddTransactionDialog } from './add-transaction-dialog'
 import { EditTransactionDialog } from './edit-transaction-dialog'
 import { MarkPaidDialog } from './mark-paid-dialog'
 import { EditAccountDialog } from './edit-account-dialog'
-import { deleteTransaction, markBillPaid } from '@/app/actions/money'
+import { deleteTransaction, markBillPaid, saveCustomAccounts } from '@/app/actions/money'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -435,7 +436,7 @@ function TransactionRow({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+      <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
         <button
           onClick={() => onEdit(txn)}
           className="rounded-lg p-1.5 hover:bg-blue-500/10 transition-colors"
@@ -453,6 +454,498 @@ function TransactionRow({
   )
 }
 
+// ─── Onboarding Wizard ────────────────────────────────────────────────────────
+
+function MoneyOnboarding() {
+  const router = useRouter()
+  const [step, setStep] = useState(0)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  type OnboardingCard = {
+    name: string
+    creditLimit: string
+    billingCycleDay: number
+    dueDateDay: number | null
+    dueDaysAfterBill: number | null
+    color: string
+  }
+
+  // Initial templates matching the user's setup
+  const [cards, setCards] = useState<OnboardingCard[]>([
+    { name: 'Flipkart Axis Bank', creditLimit: '19000', billingCycleDay: 13, dueDateDay: 26, dueDaysAfterBill: null, color: '#f97316' },
+    { name: 'Roar Bank', creditLimit: '5000', billingCycleDay: 1, dueDateDay: null, dueDaysAfterBill: 15, color: '#8b5cf6' }
+  ])
+
+  const [banks, setBanks] = useState([
+    { name: 'Kotak Bank', balance: '0', color: '#ef4444' },
+    { name: 'Indie Bank', balance: '0', color: '#06b6d4' }
+  ])
+
+  const [cashBalance, setCashBalance] = useState('0')
+
+  // Inline forms for adding new items
+  const [newCard, setNewCard] = useState({
+    name: '',
+    creditLimit: '',
+    billingCycleDay: 15,
+    dueType: 'fixed', // 'fixed' | 'days_after'
+    dueDateDay: 30,
+    dueDaysAfterBill: 15,
+    color: '#6366f1'
+  })
+
+  const [newBank, setNewBank] = useState({
+    name: '',
+    balance: '',
+    color: '#10b981'
+  })
+
+  const [showAddCardForm, setShowAddCardForm] = useState(false)
+  const [showAddBankForm, setShowAddBankForm] = useState(false)
+
+  const handleAddCard = () => {
+    if (!newCard.name || !newCard.creditLimit) {
+      toast.error('Card Name and Limit are required')
+      return
+    }
+    setCards([
+      ...cards,
+      {
+        name: newCard.name,
+        creditLimit: newCard.creditLimit,
+        billingCycleDay: Number(newCard.billingCycleDay),
+        dueDateDay: newCard.dueType === 'fixed' ? Number(newCard.dueDateDay) : null,
+        dueDaysAfterBill: newCard.dueType === 'days_after' ? Number(newCard.dueDaysAfterBill) : null,
+        color: newCard.color
+      }
+    ])
+    setNewCard({
+      name: '',
+      creditLimit: '',
+      billingCycleDay: 15,
+      dueType: 'fixed',
+      dueDateDay: 30,
+      dueDaysAfterBill: 15,
+      color: '#6366f1'
+    })
+    setShowAddCardForm(false)
+  }
+
+  const handleAddBank = () => {
+    if (!newBank.name) {
+      toast.error('Bank Name is required')
+      return
+    }
+    setBanks([
+      ...banks,
+      {
+        name: newBank.name,
+        balance: newBank.balance || '0',
+        color: newBank.color
+      }
+    ])
+    setNewBank({
+      name: '',
+      balance: '',
+      color: '#10b981'
+    })
+    setShowAddBankForm(false)
+  }
+
+  const handleSave = async (quickSetup = false) => {
+    setIsSubmitting(true)
+    try {
+      let finalAccounts = []
+
+      if (quickSetup) {
+        // Just use default user setup directly
+        finalAccounts = [
+          { name: 'Flipkart Axis Bank', type: 'credit_card' as const, balance: '0', creditLimit: '19000', billingCycleDay: 13, dueDateDay: 26, dueDaysAfterBill: null, color: '#f97316' },
+          { name: 'Roar Bank', type: 'credit_card' as const, balance: '0', creditLimit: '5000', billingCycleDay: 1, dueDateDay: null, dueDaysAfterBill: 15, color: '#8b5cf6' },
+          { name: 'Kotak Bank', type: 'bank_account' as const, balance: '0', color: '#ef4444' },
+          { name: 'Indie Bank', type: 'bank_account' as const, balance: '0', color: '#06b6d4' },
+          { name: 'Cash', type: 'cash' as const, balance: '0', color: '#22c55e' }
+        ]
+      } else {
+        // Construct from wizard state
+        cards.forEach(c => {
+          finalAccounts.push({
+            name: c.name,
+            type: 'credit_card' as const,
+            balance: '0',
+            creditLimit: c.creditLimit,
+            billingCycleDay: c.billingCycleDay,
+            dueDateDay: c.dueDateDay,
+            dueDaysAfterBill: c.dueDaysAfterBill,
+            color: c.color
+          })
+        })
+
+        banks.forEach(b => {
+          finalAccounts.push({
+            name: b.name,
+            type: 'bank_account' as const,
+            balance: b.balance,
+            color: b.color
+          })
+        })
+
+        finalAccounts.push({
+          name: 'Cash',
+          type: 'cash' as const,
+          balance: cashBalance,
+          color: '#22c55e'
+        })
+      }
+
+      await saveCustomAccounts(finalAccounts)
+      toast.success('Money Management Setup Complete!')
+      router.refresh()
+    } catch (e: any) {
+      toast.error('Failed to save accounts: ' + e.message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="max-w-md mx-auto my-8 p-6 bg-card border rounded-2xl shadow-xl space-y-6">
+      
+      {/* Progress header */}
+      {step > 0 && (
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <span>Step {step} of 4</span>
+            <span>
+              {step === 1 && 'Credit Cards'}
+              {step === 2 && 'Bank Accounts'}
+              {step === 3 && 'Cash Setup'}
+              {step === 4 && 'Review & Finish'}
+            </span>
+          </div>
+          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+            <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${(step / 4) * 100}%` }} />
+          </div>
+        </div>
+      )}
+
+      {/* Step 0: Welcome Screen */}
+      {step === 0 && (
+        <div className="text-center space-y-6 py-4">
+          <div className="inline-flex p-4 rounded-full bg-primary/10 text-primary mb-2">
+            <Sparkles className="h-8 w-8" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold tracking-tight">Setup Money Manager</h2>
+            <p className="text-sm text-muted-foreground">
+              Let's customize your credit cards, banks, and cash accounts to start tracking every rupee!
+            </p>
+          </div>
+
+          <div className="grid gap-3 pt-4">
+            <Button onClick={() => setStep(1)} className="w-full gap-2">
+              Start Custom Setup Wizard <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button onClick={() => handleSave(true)} variant="outline" className="w-full gap-2 text-muted-foreground hover:text-foreground" disabled={isSubmitting}>
+              Quick Setup Default Accounts
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 1: Credit Cards Setup */}
+      {step === 1 && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-bold">Configure Credit Cards</h3>
+          <p className="text-xs text-muted-foreground">
+            Configure cards you use regularly. You can also add custom ones like SBI or HDFC.
+          </p>
+
+          <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+            {cards.map((c, idx) => (
+              <div key={idx} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                <div>
+                  <div className="font-semibold text-sm">{c.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    Limit: ₹{parseFloat(c.creditLimit).toLocaleString()} • Bill Day: {c.billingCycleDay}th
+                  </div>
+                </div>
+                <button
+                  onClick={() => setCards(cards.filter((_, i) => i !== idx))}
+                  className="p-1 text-destructive hover:bg-destructive/10 rounded"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {!showAddCardForm ? (
+            <Button onClick={() => setShowAddCardForm(true)} variant="outline" size="sm" className="w-full gap-1 border-dashed">
+              <Plus className="h-4 w-4" /> Add Custom Card
+            </Button>
+          ) : (
+            <div className="p-4 border rounded-xl bg-muted/20 space-y-3">
+              <div>
+                <label className="text-xs font-semibold">Card Name (e.g. HDFC Regalia, SBI SimpleClick)</label>
+                <Input
+                  placeholder="Card Name"
+                  value={newCard.name}
+                  onChange={e => setNewCard({ ...newCard, name: e.target.value })}
+                  className="mt-1 h-8 text-sm"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs font-semibold">Limit (₹)</label>
+                  <Input
+                    type="number"
+                    placeholder="20000"
+                    value={newCard.creditLimit}
+                    onChange={e => setNewCard({ ...newCard, creditLimit: e.target.value })}
+                    className="mt-1 h-8 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold">Bill Day of Month</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="31"
+                    value={newCard.billingCycleDay}
+                    onChange={e => setNewCard({ ...newCard, billingCycleDay: Number(e.target.value) })}
+                    className="mt-1 h-8 text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold">Due Date Logic</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-1.5 text-xs">
+                    <input
+                      type="radio"
+                      checked={newCard.dueType === 'fixed'}
+                      onChange={() => setNewCard({ ...newCard, dueType: 'fixed' })}
+                    />
+                    Fixed Date (e.g. 26th)
+                  </label>
+                  <label className="flex items-center gap-1.5 text-xs">
+                    <input
+                      type="radio"
+                      checked={newCard.dueType === 'days_after'}
+                      onChange={() => setNewCard({ ...newCard, dueType: 'days_after' })}
+                    />
+                    Days after bill (e.g. 15 days)
+                  </label>
+                </div>
+
+                {newCard.dueType === 'fixed' ? (
+                  <div>
+                    <label className="text-xs text-muted-foreground">Due Day of Month</label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={newCard.dueDateDay}
+                      onChange={e => setNewCard({ ...newCard, dueDateDay: Number(e.target.value) })}
+                      className="mt-1 h-8 text-sm"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <label className="text-xs text-muted-foreground">Due Days After Bill</label>
+                    <Input
+                      type="number"
+                      value={newCard.dueDaysAfterBill}
+                      onChange={e => setNewCard({ ...newCard, dueDaysAfterBill: Number(e.target.value) })}
+                      className="mt-1 h-8 text-sm"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button onClick={() => setShowAddCardForm(false)} variant="ghost" size="sm">Cancel</Button>
+                <Button onClick={handleAddCard} size="sm">Add Card</Button>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-between pt-4">
+            <Button onClick={() => setStep(0)} variant="ghost" size="sm" className="gap-1">
+              <ChevronLeft className="h-4 w-4" /> Back
+            </Button>
+            <Button onClick={() => setStep(2)} size="sm" className="gap-1">
+              Next Step <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 2: Bank Accounts Setup */}
+      {step === 2 && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-bold">Configure Bank Accounts</h3>
+          <p className="text-xs text-muted-foreground">
+            Configure bank accounts where you keep funds to pay CC bills (e.g. SBI, HDFC, Kotak).
+          </p>
+
+          <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+            {banks.map((b, idx) => (
+              <div key={idx} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                <div>
+                  <div className="font-semibold text-sm">{b.name}</div>
+                  <div className="text-xs text-muted-foreground">Initial Balance: ₹{parseFloat(b.balance).toLocaleString()}</div>
+                </div>
+                <button
+                  onClick={() => setBanks(banks.filter((_, i) => i !== idx))}
+                  className="p-1 text-destructive hover:bg-destructive/10 rounded"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {!showAddBankForm ? (
+            <Button onClick={() => setShowAddBankForm(true)} variant="outline" size="sm" className="w-full gap-1 border-dashed">
+              <Plus className="h-4 w-4" /> Add Custom Bank Account
+            </Button>
+          ) : (
+            <div className="p-4 border rounded-xl bg-muted/20 space-y-3">
+              <div>
+                <label className="text-xs font-semibold">Bank Name (e.g. SBI Savings, HDFC Bank)</label>
+                <Input
+                  placeholder="Bank Name"
+                  value={newBank.name}
+                  onChange={e => setNewBank({ ...newBank, name: e.target.value })}
+                  className="mt-1 h-8 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold">Initial Balance (₹)</label>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  value={newBank.balance}
+                  onChange={e => setNewBank({ ...newBank, balance: e.target.value })}
+                  className="mt-1 h-8 text-sm"
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleAddBank()
+                  }}
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button onClick={() => setShowAddBankForm(false)} variant="ghost" size="sm">Cancel</Button>
+                <Button onClick={handleAddBank} size="sm">Add Bank</Button>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-between pt-4">
+            <Button onClick={() => setStep(1)} variant="ghost" size="sm" className="gap-1">
+              <ChevronLeft className="h-4 w-4" /> Back
+            </Button>
+            <Button onClick={() => setStep(3)} size="sm" className="gap-1">
+              Next Step <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 3: Cash Setup */}
+      {step === 3 && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-bold">Configure Cash</h3>
+          <p className="text-xs text-muted-foreground">
+            Configure how much physical cash you currently have in hand to keep track of offline spending.
+          </p>
+
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-semibold">Physical Cash Balance (₹)</label>
+              <Input
+                type="number"
+                placeholder="0"
+                value={cashBalance}
+                onChange={e => setCashBalance(e.target.value)}
+                className="mt-1"
+                onKeyDown={e => {
+                  if (e.key === 'Enter') setStep(4)
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-between pt-4">
+            <Button onClick={() => setStep(2)} variant="ghost" size="sm" className="gap-1">
+              <ChevronLeft className="h-4 w-4" /> Back
+            </Button>
+            <Button onClick={() => setStep(4)} size="sm" className="gap-1">
+              Review Setup <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 4: Review and Finish */}
+      {step === 4 && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-bold">Confirm Account Setup</h3>
+          <p className="text-xs text-muted-foreground">
+            Please review the accounts before generating the dashboard.
+          </p>
+
+          <div className="space-y-3 max-h-[300px] overflow-y-auto">
+            {cards.length > 0 && (
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">Credit Cards</div>
+                {cards.map((c, idx) => (
+                  <div key={idx} className="flex justify-between text-sm py-1 border-b">
+                    <span>💳 {c.name}</span>
+                    <span className="font-semibold">₹{parseFloat(c.creditLimit).toLocaleString()} limit</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {banks.length > 0 && (
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground mt-2">Bank Accounts</div>
+                {banks.map((b, idx) => (
+                  <div key={idx} className="flex justify-between text-sm py-1 border-b">
+                    <span>🏦 {b.name}</span>
+                    <span className="font-semibold">₹{parseFloat(b.balance).toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <div className="text-xs font-semibold text-muted-foreground mt-2">Cash</div>
+              <div className="flex justify-between text-sm py-1 border-b">
+                <span>💵 Cash in Hand</span>
+                <span className="font-semibold">₹{parseFloat(cashBalance || '0').toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-between pt-4">
+            <Button onClick={() => setStep(3)} variant="ghost" size="sm" className="gap-1" disabled={isSubmitting}>
+              <ChevronLeft className="h-4 w-4" /> Back
+            </Button>
+            <Button onClick={() => handleSave(false)} size="sm" className="gap-1" disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : 'Finish Setup & Open Dashboard'} <Check className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+    </div>
+  )
+}
+
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 
 export function MoneyDashboard({
@@ -464,6 +957,7 @@ export function MoneyDashboard({
   transactions: Transaction[]
   bills: Bill[]
 }) {
+  const router = useRouter()
   const [transactions, setTransactions] = useState(initialTransactions)
   const [showAdd, setShowAdd] = useState(false)
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null)
@@ -471,6 +965,10 @@ export function MoneyDashboard({
   const [filterAccount, setFilterAccount] = useState<string>('all')
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
+
+  if (initialAccounts.length === 0) {
+    return <MoneyOnboarding />
+  }
 
   const accounts = initialAccounts
   const bills = initialBills

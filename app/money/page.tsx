@@ -3,7 +3,7 @@ import { DashboardSidebar } from '@/components/dashboard-sidebar'
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { getAccounts, getTransactions, getCCBills, seedDefaultAccounts } from '@/app/actions/money'
+import { getAccounts, getTransactions, getCCBills } from '@/app/actions/money'
 import { MoneyDashboard } from '@/components/money/money-dashboard'
 
 export const metadata = {
@@ -16,9 +16,6 @@ export default async function MoneyPage() {
   if (!session?.user) {
     redirect('/sign-in')
   }
-
-  // Seed default accounts on first visit
-  await seedDefaultAccounts()
 
   const [accounts, transactions, bills] = await Promise.all([
     getAccounts(),

@@ -103,6 +103,37 @@ export async function seedDefaultAccounts() {
   return created
 }
 
+export async function saveCustomAccounts(
+  accountsData: {
+    name: string
+    type: 'credit_card' | 'bank_account' | 'cash'
+    balance: string
+    creditLimit?: string | null
+    billingCycleDay?: number | null
+    dueDateDay?: number | null
+    dueDaysAfterBill?: number | null
+    color?: string
+    icon?: string
+  }[]
+) {
+  const userId = await getUserId()
+  const values = accountsData.map(acc => ({
+    userId,
+    name: acc.name,
+    type: acc.type,
+    balance: acc.balance,
+    creditLimit: acc.creditLimit || null,
+    billingCycleDay: acc.billingCycleDay || null,
+    dueDateDay: acc.dueDateDay || null,
+    dueDaysAfterBill: acc.dueDaysAfterBill || null,
+    color: acc.color || '#6366f1',
+    icon: acc.icon || 'credit-card',
+  }))
+  const created = await db.insert(moneyAccounts).values(values).returning()
+  revalidatePath('/money')
+  return created
+}
+
 export async function updateAccount(
   id: number,
   data: {
