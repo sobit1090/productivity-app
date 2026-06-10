@@ -1,3 +1,4 @@
+@import url('https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -37,6 +38,24 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --color-background-primary: #121212;
+  --color-background-secondary: #1a1a19;
+  --color-text-primary: #f0efe8;
+  --color-text-secondary: #9a9892;
+  --color-border-tertiary: rgba(255,255,255,0.08);
+  --color-border-secondary: rgba(255,255,255,0.15);
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+[data-theme="light"] {
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f8f8f6;
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #6b6a67;
+  --color-border-tertiary: rgba(0,0,0,0.12);
+  --color-border-secondary: rgba(0,0,0,0.25);
 }
 
 .dark {
@@ -72,6 +91,21 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+  --color-background-primary: #1c1c1a;
+  --color-background-secondary: #252523;
+  --color-text-primary: #f0efe8;
+  --color-text-secondary: #9a9892;
+  --color-border-tertiary: rgba(255,255,255,0.10);
+  --color-border-secondary: rgba(255,255,255,0.20);
+}
+
+[data-theme="dark"] {
+  --color-background-primary: #1c1c1a;
+  --color-background-secondary: #252523;
+  --color-text-primary: #f0efe8;
+  --color-text-secondary: #9a9892;
+  --color-border-tertiary: rgba(255,255,255,0.10);
+  --color-border-secondary: rgba(255,255,255,0.20);
 }
 
 @theme inline {
@@ -219,4 +253,28 @@
 
 .schedule-pulse {
   animation: schedulePulse 2s ease-in-out infinite;
+}
+
+@keyframes blockEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes savedFade {
+  0%   { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.block-enter {
+  animation: blockEnter 0.25s ease forwards;
+}
+
+.saved-indicator {
+  animation: savedFade 1.5s ease forwards;
 }
