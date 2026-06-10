@@ -67,7 +67,7 @@ export function PlannerView({
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 200, // 200ms hold delay to prevent drag triggering on touch scroll
+        delay: 200,
         tolerance: 6,
       },
     }),
@@ -177,7 +177,6 @@ export function PlannerView({
         padding: '1.5rem',
       }}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          {/* Title and Subtitle inputs */}
           <div className="flex-1 min-w-0">
             <input
               ref={titleInputRef}
@@ -196,7 +195,6 @@ export function PlannerView({
             />
           </div>
 
-          {/* Action Button Row */}
           <div className="flex items-center gap-2.5 flex-wrap flex-shrink-0">
             {showSaved && (
               <span className="saved-indicator text-xs text-[#1D9E75] font-semibold mr-1.5 flex items-center gap-1">
@@ -240,24 +238,28 @@ export function PlannerView({
         </div>
       </div>
 
-      {/* 2. Day Type Selection Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+      {/* 2. Day Type Selection Tabs (Styled like badge colors in PDF) */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {plan.dayTypes.map((dt) => {
           const isActive = dt.id === activeTabId;
+          const colorConfig = COLORS[dt.accentColor || 'purple'] || COLORS.gray;
+
           return (
             <button
               key={dt.id}
               onClick={() => setActiveTabId(dt.id)}
               style={isActive ? {
-                backgroundColor: '#7F77DD',
-                borderColor: '#7F77DD',
+                backgroundColor: colorConfig.hex,
+                borderColor: colorConfig.hex,
                 color: '#fff',
-              } : {}}
-              className={`px-4 py-2 text-xs font-bold rounded-lg border border-solid transition-all cursor-pointer ${
-                isActive
-                  ? 'text-white'
-                  : 'border-gray-800 bg-[#1e1e1c] text-gray-400 hover:text-white hover:bg-[#252523]'
-              }`}
+                fontWeight: 700,
+              } : {
+                backgroundColor: colorConfig.light,
+                borderColor: colorConfig.hex,
+                color: colorConfig.dark,
+                fontWeight: 600,
+              }}
+              className="px-4 py-1.5 text-xs rounded-lg border border-solid transition-all cursor-pointer shadow-sm"
             >
               {dt.name}
             </button>
@@ -266,19 +268,30 @@ export function PlannerView({
 
         <button
           onClick={handleAddDayType}
-          className="px-4 py-2 text-xs font-bold rounded-lg border border-dashed border-gray-750 text-gray-400 hover:text-white hover:border-gray-600 bg-transparent cursor-pointer transition-colors flex items-center gap-1 flex-shrink-0"
+          className="px-4 py-1.5 text-xs font-semibold rounded-lg border border-dashed border-gray-700 text-gray-400 hover:text-white hover:border-gray-500 bg-[#1e1e1c] cursor-pointer transition-colors flex items-center gap-1 flex-shrink-0"
         >
-          <i className="ti ti-plus" style={{ fontSize: 12 }} />
+          <i className="ti ti-plus" style={{ fontSize: 11 }} />
           Add day type
         </button>
       </div>
 
-      {/* 3. Day Subtitle Focus Text */}
+      {/* 3. Solid Accent-Colored Day Focus Title (Table Header Bar) */}
       {activeDayType && (
-        <div className="flex items-center px-1 mb-1">
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#f0efe8' }} className="mr-2">
-            {activeDayType.name} — Focus:
-          </span>
+        <div 
+          style={{
+            backgroundColor: COLORS[activeDayType.accentColor || 'purple']?.hex || '#888780',
+            color: '#fff',
+            borderRadius: 'var(--border-radius-lg) var(--border-radius-lg) 0 0',
+            padding: '0.65rem 1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontWeight: 750,
+            fontSize: '13px'
+          }}
+          className="w-full select-none"
+        >
+          <span className="flex-shrink-0">{activeDayType.name} · Focus:</span>
           <input
             type="text"
             value={activeDayType.focusSubtitle}
@@ -288,19 +301,69 @@ export function PlannerView({
               );
               onPlanChange({ ...plan, dayTypes: updatedDayTypes });
             }}
-            className="text-[13px] font-semibold text-gray-400 bg-transparent border-b border-transparent focus:border-[#7F77DD] focus:outline-none flex-1 py-0.5"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              borderBottom: '1px dashed rgba(255,255,255,0.4)',
+              color: '#fff',
+              outline: 'none',
+              fontWeight: 700,
+              fontSize: '13px',
+              flex: 1,
+              padding: 0
+            }}
             placeholder="Focus area (e.g. GATE Core + Aptitude)"
           />
         </div>
       )}
 
-      {/* 4. Timetable Cards Container */}
+      {/* 4. Timetable Cards Container (Flush below the focus header bar) */}
       <div style={{
         background: '#151514',
         border: '0.5px solid var(--color-border-tertiary)',
-        borderRadius: 'var(--border-radius-lg)',
+        borderRadius: '0 0 var(--border-radius-lg) var(--border-radius-lg)',
+        borderTop: 'none',
         padding: '1.25rem',
+        marginTop: '-1.5rem', // Pull up to meet focus header flush
       }} className="w-full">
+        
+        {/* Column Subheader Row (Time | Session | Actions) */}
+        {activeDayType && activeDayType.blocks.length > 0 && (
+          <div 
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              backgroundColor: '#1b1b1a',
+              borderBottom: '1.5px solid var(--color-border-tertiary)',
+              padding: '8px 16px',
+              marginBottom: '12px',
+              borderRadius: 'var(--border-radius-md)'
+            }}
+            className="text-[11px] font-bold text-gray-400 uppercase tracking-wider hidden sm:flex"
+          >
+            {/* Grip handle spacer */}
+            <div style={{ width: '30px' }} className="flex-shrink-0" />
+            
+            {/* Color Accent line spacer */}
+            <div style={{ width: '5px' }} className="flex-shrink-0" />
+            
+            {/* Time Header */}
+            <div style={{ width: '135px' }} className="text-center flex-shrink-0">
+              Time
+            </div>
+            
+            {/* Session Header */}
+            <div className="flex-1 pl-4">
+              Session
+            </div>
+            
+            {/* Actions Spacer */}
+            <div style={{ width: '50px' }} className="flex-shrink-0 text-right pr-2">
+              Actions
+            </div>
+          </div>
+        )}
+
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
