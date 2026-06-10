@@ -220,3 +220,79 @@ export function generateSchedulePlan(answers: QuestionAnswers): SchedulePlan {
     noteB,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Pre-seeded plan from sobit.pdf
+// B.Tech CSE Graduate · GATE + Software Jobs + Govt Jobs
+// 10:00 AM – 7:00 PM · Alternate Day Structure
+// ---------------------------------------------------------------------------
+export function getSobitPlan(): SchedulePlan {
+  const dayA: DayType = {
+    id: 'day-a',
+    name: 'Day A',
+    focusSubtitle: 'GATE Core + Aptitude',
+    accentColor: 'purple',
+    blocks: [
+      { id: uid(), startTime: '10:00', endTime: '10:15', name: 'Warm-up Review',       description: "Revise yesterday's notes only — 15 min, no new topics.",                                        colorName: 'gray'   },
+      { id: uid(), startTime: '10:15', endTime: '12:15', name: 'GATE Core — Deep Study', description: 'Rotate weekly: OS → DBMS → Algorithms → TOC → CN. Read concept + solve PYQs.',               colorName: 'purple' },
+      { id: uid(), startTime: '12:15', endTime: '13:00', name: 'Lunch Break',            description: 'Step away from screen completely. No studying.',                                                colorName: 'gray'   },
+      { id: uid(), startTime: '13:00', endTime: '14:30', name: 'GATE — Practice & PYQs', description: 'Solve 20–25 previous year questions on today\'s topic. Mark all doubts.',                      colorName: 'purple' },
+      { id: uid(), startTime: '14:30', endTime: '14:45', name: 'Short Break',            description: 'Walk, water, rest your eyes.',                                                                  colorName: 'gray'   },
+      { id: uid(), startTime: '14:45', endTime: '16:15', name: 'Aptitude — Topic-wise',  description: 'Quant: Number system, %, ratio, time-work. Logical: syllogisms, seating. 1 topic per day.',  colorName: 'amber'  },
+      { id: uid(), startTime: '16:15', endTime: '16:30', name: 'Break',                  description: '',                                                                                               colorName: 'gray'   },
+      { id: uid(), startTime: '16:30', endTime: '18:15', name: 'DSA — 1 Problem Set',    description: 'Arrays / Strings / Linked Lists (Easy–Medium). Solve 2+ problems. Understand, don\'t just copy.', colorName: 'coral' },
+      { id: uid(), startTime: '18:15', endTime: '19:00', name: 'End-of-Day Notes',       description: 'Write 5 key points from today. Mark what to revisit. Log in notebook or Notion.',             colorName: 'gray'   },
+    ],
+  };
+
+  const dayB: DayType = {
+    id: 'day-b',
+    name: 'Day B',
+    focusSubtitle: 'DSA Deep Dive + Project',
+    accentColor: 'teal',
+    blocks: [
+      { id: uid(), startTime: '10:00', endTime: '10:15', name: 'Warm-up Review',          description: "Skim yesterday's GATE notes — 15 min only.",                                                                  colorName: 'gray'   },
+      { id: uid(), startTime: '10:15', endTime: '12:30', name: 'DSA — Structured Practice', description: 'Roadmap: Arrays → Recursion → Sorting → Trees → Graphs. Solve 3–5 LeetCode Easy/Medium.',              colorName: 'teal'   },
+      { id: uid(), startTime: '12:30', endTime: '13:15', name: 'Lunch Break',               description: 'Full break. Step away from screen.',                                                                       colorName: 'gray'   },
+      { id: uid(), startTime: '13:15', endTime: '14:30', name: 'Aptitude — Timed Mock',     description: '20-question timed test (25 min). Analyse wrong answers for 30 min. Builds NQT + govt readiness.',       colorName: 'amber'  },
+      { id: uid(), startTime: '14:30', endTime: '14:45', name: 'Break',                     description: '',                                                                                                          colorName: 'gray'   },
+      { id: uid(), startTime: '14:45', endTime: '17:45', name: 'Project Work',              description: '3 hours uninterrupted. Build a real, deployable web project. Connects directly to job portfolio.',       colorName: 'coral'  },
+      { id: uid(), startTime: '17:45', endTime: '18:15', name: 'GATE — 1 Short Topic',      description: 'Read one small GATE concept (e.g. one page of OS or CN). Keep GATE warm even on B days.',               colorName: 'purple' },
+      { id: uid(), startTime: '18:15', endTime: '19:00', name: 'End-of-Day Log',            description: 'What did I build today? What DSA pattern did I learn? Log it.',                                          colorName: 'gray'   },
+    ],
+  };
+
+  const weeklyRhythm: import('@/types/planner').WeeklyRhythmDay[] = [
+    { day: 'Monday',    dayTypeId: 'day-a', topic: 'GATE: OS / Algorithms · Aptitude: Quantitative topic' },
+    { day: 'Tuesday',   dayTypeId: 'day-b', topic: 'DSA: Arrays / Strings · Project: Start or continue feature' },
+    { day: 'Wednesday', dayTypeId: 'day-a', topic: 'GATE: DBMS · Aptitude: Logical Reasoning' },
+    { day: 'Thursday',  dayTypeId: 'day-b', topic: 'DSA: Recursion / Sorting · Project: Continue building' },
+    { day: 'Friday',    dayTypeId: 'day-a', topic: 'GATE: TOC / CN · Aptitude: Full mock test' },
+    { day: 'Saturday',  dayTypeId: 'day-b', topic: 'Morning: GATE mock (2 hr). Afternoon: DSA contest. Evening: weak area fix.' },
+    { day: 'Sunday',    dayTypeId: 'day-b', topic: 'Revise week\'s notes (1.5 hr). Plan next week. 30 min job applications.' },
+  ];
+
+  const weeklyTasks: WeeklyTask[] = [
+    { id: uid(), title: 'Complete GATE topic of the week with PYQs',              category: 'GATE',    done: false },
+    { id: uid(), title: 'Solve 3–5 LeetCode Easy/Medium problems per DSA session', category: 'DSA',     done: false },
+    { id: uid(), title: 'Make measurable progress on web project',                 category: 'Project', done: false },
+    { id: uid(), title: 'Complete all aptitude topic-wise + 1 mock test',          category: 'Aptitude',done: false },
+    { id: uid(), title: 'Apply to 3–5 companies (Sunday evening)',                 category: 'Jobs',    done: false },
+    { id: uid(), title: 'Get a notebook and log what you study each day',          category: 'Habit',   done: false },
+    { id: uid(), title: 'Pick OS as your first GATE subject',                      category: 'GATE',    done: false },
+    { id: uid(), title: 'Do 2 LeetCode Easy problems tonight to build DSA habit',  category: 'DSA',     done: false },
+  ];
+
+  return {
+    id: uid(),
+    title: 'Daily Study Plan',
+    subtitle: '10:00 AM – 7:00 PM · Alternate Day Structure',
+    startTime: '10:00',
+    endTime:   '19:00',
+    dayTypes:      [dayA, dayB],
+    weeklyRhythm,
+    weeklyTasks,
+    noteA: 'Every GATE topic (OS, DBMS, Algorithms) also helps in software jobs and govt exams — study is never wasted.',
+    noteB: 'Your 3-hour project block on Day B means you are always ready for take-home dev assignments.',
+  };
+}

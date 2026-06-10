@@ -288,7 +288,7 @@ export default async function CalendarPage() {
                     <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
                       Months Tracker
                     </h3>
-                    <div className="space-y-1 max-h-[320px] overflow-y-auto pr-0.5 -mr-1">
+                    <div className="space-y-1">
                       {monthsList.map((mName, mIdx) => {
                         const isDone = mIdx < currentMonth
                         const isCurr = mIdx === currentMonth
