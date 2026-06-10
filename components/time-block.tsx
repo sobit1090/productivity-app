@@ -39,6 +39,9 @@ export function TimeBlock({ block, index, onUpdate, onDelete }: TimeBlockProps) 
 
   const colorConfig = COLORS[block.colorName] || COLORS.gray;
 
+  // Format time display cleanly (e.g. 09:00 to 9:00 if needed, or display as is)
+  const displayTimeRange = `${block.startTime}–${block.endTime}`;
+
   return (
     <div
       ref={setNodeRef}
@@ -50,7 +53,7 @@ export function TimeBlock({ block, index, onUpdate, onDelete }: TimeBlockProps) 
         <div
           {...attributes}
           {...listeners}
-          className="flex items-center justify-center px-2.5 cursor-grab active:cursor-grabbing text-gray-500 hover:text-white bg-[rgba(255,255,255,0.01)] border-r border-solid border-[var(--color-border-tertiary)] transition-colors flex-shrink-0"
+          className="flex items-center justify-center px-2.5 cursor-grab active:cursor-grabbing text-gray-500 hover:text-white bg-[rgba(255,255,255,0.01)] border-r border-solid border-[var(--color-border-tertiary)] transition-colors flex-shrink-0 touch-none"
           title="Drag to reorder"
         >
           <i className="ti ti-grip-vertical" style={{ fontSize: 15 }} />
@@ -67,26 +70,16 @@ export function TimeBlock({ block, index, onUpdate, onDelete }: TimeBlockProps) 
 
         {/* Main layout container (stacked on mobile, row on desktop) */}
         <div className="flex flex-col sm:flex-row flex-1 min-w-0 relative">
-          {/* Time column */}
+          {/* Time column (text display that toggles edit bar on click) */}
           <div 
-            className="flex items-center justify-start sm:justify-center px-4 py-2.5 sm:py-0 bg-[rgba(255,255,255,0.005)] border-b sm:border-b-0 sm:border-r border-solid border-[var(--color-border-tertiary)] flex-shrink-0"
+            onClick={() => setShowEditBar(!showEditBar)}
+            className="flex items-center justify-start sm:justify-center px-5 py-3 sm:py-0 bg-[rgba(255,255,255,0.005)] border-b sm:border-b-0 sm:border-r border-solid border-[var(--color-border-tertiary)] flex-shrink-0 cursor-pointer hover:bg-[rgba(255,255,255,0.02)] transition-colors"
             style={{ minWidth: '135px' }}
+            title="Click to edit timings"
           >
-            <div className="flex items-center gap-1 text-[13px] font-semibold text-white">
-              <input
-                type="time"
-                value={block.startTime}
-                onChange={(e) => onUpdate({ ...block, startTime: e.target.value })}
-                className="bg-transparent border-none text-center focus:outline-none cursor-pointer w-[50px] text-white font-medium"
-              />
-              <span className="text-gray-500 font-normal select-none">–</span>
-              <input
-                type="time"
-                value={block.endTime}
-                onChange={(e) => onUpdate({ ...block, endTime: e.target.value })}
-                className="bg-transparent border-none text-center focus:outline-none cursor-pointer w-[50px] text-white font-medium"
-              />
-            </div>
+            <span className="text-[13px] font-semibold text-white tracking-wide select-none">
+              {displayTimeRange}
+            </span>
           </div>
 
           {/* Body content */}
@@ -166,14 +159,14 @@ export function TimeBlock({ block, index, onUpdate, onDelete }: TimeBlockProps) 
               type="time"
               value={block.startTime}
               onChange={(e) => onUpdate({ ...block, startTime: e.target.value })}
-              className="text-xs px-2 py-1 border border-solid border-gray-700 rounded bg-[#222] text-white focus:outline-none"
+              className="text-xs px-2.5 py-1 border border-solid border-gray-700 rounded bg-[#222] text-white focus:outline-none w-[90px] cursor-pointer"
             />
             <span className="text-xs text-[#9a9892]">to</span>
             <input
               type="time"
               value={block.endTime}
               onChange={(e) => onUpdate({ ...block, endTime: e.target.value })}
-              className="text-xs px-2 py-1 border border-solid border-gray-700 rounded bg-[#222] text-white focus:outline-none"
+              className="text-xs px-2.5 py-1 border border-solid border-gray-700 rounded bg-[#222] text-white focus:outline-none w-[90px] cursor-pointer"
             />
           </div>
 
