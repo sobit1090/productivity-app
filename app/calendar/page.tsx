@@ -36,11 +36,22 @@ export default async function CalendarPage() {
   })
 
   exams.forEach(exam => {
-    const date = format(new Date(exam.examDate), 'yyyy-MM-dd')
-    if (!eventsByDate.has(date)) {
-      eventsByDate.set(date, [])
+    if (exam.examDate) {
+      const date = format(new Date(exam.examDate), 'yyyy-MM-dd')
+      if (!eventsByDate.has(date)) {
+        eventsByDate.set(date, [])
+      }
+      eventsByDate.get(date)?.push({ type: 'exam', title: `📝 Exam: ${exam.title}` })
     }
-    eventsByDate.get(date)?.push({ type: 'exam', title: exam.title })
+
+    if (exam.resultDate) {
+      const date = format(new Date(exam.resultDate), 'yyyy-MM-dd')
+      if (!eventsByDate.has(date)) {
+        eventsByDate.set(date, [])
+      }
+      const scoreStr = exam.score ? ` (${exam.score})` : ''
+      eventsByDate.get(date)?.push({ type: 'result', title: `🏆 Result: ${exam.title}${scoreStr}` })
+    }
   })
 
   return (
@@ -87,33 +98,52 @@ export default async function CalendarPage() {
                     const dayEvents = eventsByDate.get(dateStr) || []
                     const isToday = format(today, 'yyyy-MM-dd') === dateStr
 
+                    const isSaturday = day.getDay() === 6
+                    const isSunday = day.getDay() === 0
+
+                    let borderClass = 'border-border'
+                    let bgClass = 'bg-card'
+                    let textClass = 'text-foreground'
+
+                    if (isToday) {
+                      borderClass = 'border-primary'
+                      bgClass = 'bg-primary/10'
+                      textClass = 'text-primary font-bold'
+                    } else if (isSaturday) {
+                      borderClass = 'border-red-200/50 dark:border-red-900/20'
+                      bgClass = 'bg-red-50/25 dark:bg-red-950/10'
+                      textClass = 'text-red-500/90 dark:text-red-400'
+                    } else if (isSunday) {
+                      borderClass = 'border-red-200 dark:border-red-900/40'
+                      bgClass = 'bg-red-100/20 dark:bg-red-950/25'
+                      textClass = 'text-red-600 dark:text-red-400 font-semibold'
+                    }
+
                     return (
                       <div
                         key={dateStr}
-                        className={`min-h-24 rounded-lg border p-2 ${
-                          isToday
-                            ? 'border-primary bg-primary/10'
-                            : 'border-border'
-                        }`}
+                        className={`min-h-24 rounded-lg border p-2 flex flex-col justify-between transition-colors ${borderClass} ${bgClass} ${textClass}`}
                       >
-                        <div className="mb-2 font-semibold">{format(day, 'd')}</div>
+                        <div className="mb-2 text-xs font-semibold">{format(day, 'd')}</div>
                         <div className="space-y-1 text-xs">
-                          {dayEvents.slice(0, 2).map((event, i) => (
+                          {dayEvents.slice(0, 3).map((event, i) => (
                             <div
                               key={i}
-                              className={`rounded px-1 py-0.5 ${
+                              title={event.title}
+                              className={`rounded px-1.5 py-0.5 text-[10px] font-medium truncate border ${
                                 event.type === 'exam'
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-green-100 text-green-800'
+                                  ? 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-900/30'
+                                  : event.type === 'result'
+                                    ? 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-900/30'
+                                    : 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-900/30'
                               }`}
                             >
-                              {event.title.substring(0, 12)}
-                              {event.title.length > 12 ? '...' : ''}
+                              {event.title}
                             </div>
                           ))}
-                          {dayEvents.length > 2 && (
-                            <div className="text-muted-foreground">
-                              +{dayEvents.length - 2} more
+                          {dayEvents.length > 3 && (
+                            <div className="text-[10px] text-muted-foreground px-1 font-semibold">
+                              +{dayEvents.length - 3} more
                             </div>
                           )}
                         </div>

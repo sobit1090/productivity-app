@@ -210,6 +210,136 @@ function createDefaultPlan(): SchedulePlan {
   }
 }
 
+// ─── Study Plan Setup Wizard Generator ──────────────────────────────────────────
+
+function generateScheduleFromWizard(
+  startTime: string,
+  endTime: string,
+  subjectsStr: string,
+  goalStr: string
+): SchedulePlan {
+  const subjects = subjectsStr
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean)
+  const defaultSubjects = ['General Core Study', 'Practice Questions', 'Skills Development']
+  const finalSubjects = subjects.length > 0 ? subjects : defaultSubjects
+
+  const startMin = timeToMinutes(startTime)
+  const endMin = timeToMinutes(endTime)
+  const totalMin = endMin - startMin
+
+  // Helper to get subjects circularly
+  let subjectIdx = 0
+  const getNextSubject = () => {
+    const sub = finalSubjects[subjectIdx % finalSubjects.length]
+    subjectIdx++
+    return sub
+  }
+
+  const createBlocksForDay = (startSubjectOffset: number) => {
+    subjectIdx = startSubjectOffset
+    let t = startMin
+    const blocks: TimeBlock[] = []
+
+    const pushBlock = (duration: number, name: string, desc: string, icon: string, isBreak: boolean, color: string) => {
+      const startStr = `${Math.floor(t / 60).toString().padStart(2, '0')}:${(t % 60).toString().padStart(2, '0')}`
+      t += duration
+      const endStr = `${Math.floor(t / 60).toString().padStart(2, '0')}:${(t % 60).toString().padStart(2, '0')}`
+      
+      blocks.push({
+        id: uid(),
+        startTime: startStr,
+        endTime: endStr,
+        sessionName: name,
+        description: desc,
+        color,
+        icon,
+        isBreak,
+      })
+    }
+
+    // Allocate times:
+    // Warm-up: 15 min
+    pushBlock(15, 'Warm-up Review', 'Quickly revise previous day\'s notes.', '#6366f1', false, 'sun')
+
+    // Study 1: remaining/3
+    const totalRemaining = endMin - t - 30 // exclude wrap-up
+    const study1Dur = Math.max(30, Math.floor((totalRemaining - 60) * 0.45)) // 45% of available study time
+    if (t + study1Dur < endMin - 30) {
+      pushBlock(study1Dur, getNextSubject(), `Deep study and concept learning.`, '#3b82f6', false, 'book')
+    }
+
+    // Lunch: 45 min
+    if (t + 45 < endMin - 30) {
+      pushBlock(45, 'Lunch Break', 'Rest, eat, and disconnect from screens.', '#64748b', true, 'coffee')
+    }
+
+    // Study 2
+    const study2Dur = Math.max(30, Math.floor((totalRemaining - 60) * 0.35))
+    if (t + study2Dur < endMin - 30) {
+      pushBlock(study2Dur, getNextSubject(), `Practice exercises, solve questions.`, '#a855f7', false, 'brain')
+    }
+
+    // Break: 15 min
+    if (t + 15 < endMin - 30) {
+      pushBlock(15, 'Short Break', 'Stretch, drink water, relax.', '#64748b', true, 'coffee')
+    }
+
+    // Study 3
+    const finalRemaining = endMin - t - 30
+    if (finalRemaining > 15) {
+      pushBlock(finalRemaining, getNextSubject(), `Review topics, watch lessons, or write code.`, '#10b981', false, 'code')
+    }
+
+    // Wrap-up: 30 min
+    if (t < endMin) {
+      pushBlock(endMin - t, 'End-of-Day Notes', 'Document today\'s learnings, update log.', '#ec4899', false, 'pencil')
+    }
+
+    return blocks
+  }
+
+  const dayABlocks = createBlocksForDay(0)
+  const dayBBlocks = createBlocksForDay(1) // Offset subjects by 1 to rotate
+
+  const title = goalStr ? goalStr.substring(0, 35) : 'My Personalized Plan'
+  const subtitle = `Study window: ${formatTime12(startTime)} - ${formatTime12(endTime)}`
+
+  return {
+    id: uid(),
+    title,
+    subtitle,
+    timeRange: `${formatTime12(startTime)} – ${formatTime12(endTime)}`,
+    showWeeklyRhythm: true,
+    templates: [
+      {
+        id: 'day-a',
+        name: 'Day A',
+        subtitle: `Focus: ${finalSubjects[0] || 'Core Study'}`,
+        color: '#6366f1',
+        blocks: dayABlocks,
+      },
+      {
+        id: 'day-b',
+        name: 'Day B',
+        subtitle: `Focus: ${finalSubjects[1] || finalSubjects[0] || 'Core Study'}`,
+        color: '#10b981',
+        blocks: dayBBlocks,
+      },
+    ],
+    weeklyRhythm: [
+      { day: 'Monday', templateId: 'day-a', topic: `Focus on ${finalSubjects[0] || 'Day A topics'}` },
+      { day: 'Tuesday', templateId: 'day-b', topic: `Focus on ${finalSubjects[1] || finalSubjects[0] || 'Day B topics'}` },
+      { day: 'Wednesday', templateId: 'day-a', topic: `Focus on ${finalSubjects[2] || finalSubjects[0] || 'Day A topics'}` },
+      { day: 'Thursday', templateId: 'day-b', topic: `Focus on ${finalSubjects[3] || finalSubjects[1] || finalSubjects[0] || 'Day B topics'}` },
+      { day: 'Friday', templateId: 'day-a', topic: `Review and practice ${finalSubjects[0]}` },
+      { day: 'Saturday', templateId: 'day-b', topic: `Project work and practice ${finalSubjects[1] || finalSubjects[0]}` },
+      { day: 'Sunday', templateId: 'day-a', topic: 'Weekly review & plan next week' },
+    ],
+  }
+}
+
 // ─── Inline Editable Text ───────────────────────────────────────────────────────
 
 function InlineEdit({
@@ -900,14 +1030,12 @@ export function SchedulePlanner() {
   const { data: session, isPending: sessionPending } = useSession()
   const user = session?.user
 
-  const [verified, setVerified] = useState(false)
-  const [verificationStep, setVerificationStep] = useState<'email' | 'pin' | 'questions'>('email')
-  const [emailInput, setEmailInput] = useState('')
-  const [pinInput, setPinInput] = useState('')
-  const [q1Input, setQ1Input] = useState('')
-  const [q2Input, setQ2Input] = useState('')
-  const [q3Input, setQ3Input] = useState('')
-  const [verificationError, setVerificationError] = useState('')
+  // Wizard state
+  const [showWizard, setShowWizard] = useState(false)
+  const [wizardStart, setWizardStart] = useState('09:00')
+  const [wizardEnd, setWizardEnd] = useState('17:00')
+  const [wizardSubjects, setWizardSubjects] = useState('')
+  const [wizardGoal, setWizardGoal] = useState('')
 
   // Real-time clock — updates every 30 seconds
   useEffect(() => {
@@ -915,17 +1043,12 @@ export function SchedulePlanner() {
     return () => clearInterval(timer)
   }, [])
 
-  // Load from localStorage and check session verification
+  // Load from localStorage
   useEffect(() => {
     if (sessionPending) return
 
     const userId = user?.id || 'guest'
     const userStorageKey = `studyflow-schedule-plan-${userId}`
-    const verifiedKey = `studyflow-schedule-verified-${userId}`
-
-    // Check session verification
-    const isVerified = sessionStorage.getItem(verifiedKey) === 'true'
-    setVerified(isVerified)
 
     try {
       const raw = localStorage.getItem(userStorageKey)
@@ -949,52 +1072,19 @@ export function SchedulePlanner() {
     }
   }, [plan, loaded, user, sessionPending])
 
-  const lockSchedule = () => {
-    const userId = user?.id || 'guest'
-    const verifiedKey = `studyflow-schedule-verified-${userId}`
-    sessionStorage.removeItem(verifiedKey)
-    setVerified(false)
-    setVerificationStep('email')
-    setEmailInput('')
-    setPinInput('')
-    setQ1Input('')
-    setQ2Input('')
-    setQ3Input('')
-    setVerificationError('')
-    toast.info('Schedule locked')
-  }
-
-  const handleEmailSubmit = () => {
-    if (emailInput.trim().toLowerCase() === 'sg902266@gmail.com') {
-      setVerificationError('')
-      setVerificationStep('pin')
-    } else {
-      setVerificationError('Access Denied: Invalid email address.')
-    }
-  }
-
-  const handlePinSubmit = () => {
-    if (pinInput === '902266') {
-      setVerificationError('')
-      setVerificationStep('questions')
-    } else {
-      setVerificationError('Access Denied: Incorrect verification PIN.')
-    }
-  }
-
-  const handleQuestionsSubmit = () => {
-    if (
-      q1Input === 'GATE Core + Aptitude' &&
-      q2Input === '10:00 AM' &&
-      q3Input === 'Sunday'
-    ) {
-      const userId = user?.id || 'guest'
-      const verifiedKey = `studyflow-schedule-verified-${userId}`
-      sessionStorage.setItem(verifiedKey, 'true')
-      setVerified(true)
-      toast.success('Schedule unlocked successfully!')
-    } else {
-      setVerificationError('Verification failed: Incorrect answers to security questions.')
+  const handleGenerateFromWizard = () => {
+    try {
+      const newPlan = generateScheduleFromWizard(
+        wizardStart,
+        wizardEnd,
+        wizardSubjects,
+        wizardGoal
+      )
+      setPlan(newPlan)
+      setShowWizard(false)
+      toast.success('Custom schedule generated successfully!')
+    } catch (err) {
+      toast.error('Failed to generate schedule. Please check inputs.')
     }
   }
 
@@ -1143,171 +1233,6 @@ export function SchedulePlanner() {
     )
   }
 
-  if (!verified) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[550px] p-4 md:p-8 animate-in fade-in zoom-in duration-300">
-        <Card className="w-full max-w-md p-6 md:p-8 space-y-6 shadow-2xl border border-border/80 bg-card/95 backdrop-blur-md relative overflow-hidden">
-          {/* Subtle glowing elements */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -ml-16 -mb-16" />
-
-          {/* Header */}
-          <div className="text-center space-y-2">
-            <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-3">
-              <Lock className="h-6 w-6" />
-            </div>
-            <h2 className="text-xl font-bold tracking-tight">Private Schedule Gate</h2>
-            <p className="text-xs text-muted-foreground max-w-[280px] mx-auto">
-              This schedule is highly private and restricted to the session owner. Please complete verification.
-            </p>
-          </div>
-
-          {/* Verification steps status */}
-          <div className="flex justify-center items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
-            <span className={`px-2 py-0.5 rounded-full ${verificationStep === 'email' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>1. Email</span>
-            <span className="w-4 h-[1px] bg-border" />
-            <span className={`px-2 py-0.5 rounded-full ${verificationStep === 'pin' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>2. PIN</span>
-            <span className="w-4 h-[1px] bg-border" />
-            <span className={`px-2 py-0.5 rounded-full ${verificationStep === 'questions' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>3. Verification</span>
-          </div>
-
-          {verificationError && (
-            <div className="p-3 text-xs bg-destructive/10 text-destructive border border-destructive/20 rounded-lg flex items-center gap-2">
-              <ShieldAlert className="h-4 w-4 flex-shrink-0" />
-              <span>{verificationError}</span>
-            </div>
-          )}
-
-          {/* Step 1: Email Form */}
-          {verificationStep === 'email' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="gate-email" className="text-xs font-semibold">Authorized Email Address</Label>
-                <div className="relative">
-                  <Input
-                    id="gate-email"
-                    type="email"
-                    placeholder="Enter authorized email"
-                    value={emailInput}
-                    onChange={(e) => {
-                      setEmailInput(e.target.value)
-                      if (verificationError) setVerificationError('')
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleEmailSubmit()
-                    }}
-                    className="pr-10"
-                  />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-muted-foreground">
-                    <Mail className="h-4 w-4" />
-                  </div>
-                </div>
-              </div>
-              <Button onClick={handleEmailSubmit} className="w-full font-semibold">
-                Next <ArrowRight className="ml-1.5 h-4 w-4" />
-              </Button>
-            </div>
-          )}
-
-          {/* Step 2: PIN Form */}
-          {verificationStep === 'pin' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="gate-pin" className="text-xs font-semibold">6-Digit Verification PIN</Label>
-                <div className="relative">
-                  <Input
-                    id="gate-pin"
-                    type="password"
-                    maxLength={6}
-                    placeholder="Enter PIN"
-                    value={pinInput}
-                    onChange={(e) => {
-                      setPinInput(e.target.value.replace(/\D/g, '')) // allow only digits
-                      if (verificationError) setVerificationError('')
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handlePinSubmit()
-                    }}
-                    className="pr-10 tracking-widest text-center font-mono text-lg"
-                  />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-muted-foreground">
-                    <KeyRound className="h-4 w-4" />
-                  </div>
-                </div>
-                <p className="text-[10px] text-muted-foreground text-center font-medium">
-                  Hint: The digits of the authorized email address.
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setVerificationStep('email')} className="flex-1 font-semibold">
-                  Back
-                </Button>
-                <Button onClick={handlePinSubmit} className="flex-1 font-semibold">
-                  Verify PIN
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Security Questions */}
-          {verificationStep === 'questions' && (
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="gate-q1" className="text-[11px] font-semibold text-muted-foreground uppercase">1. Study Target Focus</Label>
-                  <Select value={q1Input} onValueChange={(v) => { setQ1Input(v); setVerificationError('') }}>
-                    <SelectTrigger id="gate-q1"><SelectValue placeholder="Select primary focus" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="GATE Core + Aptitude">GATE Core + Aptitude</SelectItem>
-                      <SelectItem value="UPSC IAS GS">UPSC IAS GS</SelectItem>
-                      <SelectItem value="CAT Quantitative Ability">CAT Quantitative Ability</SelectItem>
-                      <SelectItem value="JEE Mains Advanced">JEE Mains Advanced</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="gate-q2" className="text-[11px] font-semibold text-muted-foreground uppercase">2. Default Day Start Time</Label>
-                  <Select value={q2Input} onValueChange={(v) => { setQ2Input(v); setVerificationError('') }}>
-                    <SelectTrigger id="gate-q2"><SelectValue placeholder="Select start time" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="08:00 AM">08:00 AM</SelectItem>
-                      <SelectItem value="09:00 AM">09:00 AM</SelectItem>
-                      <SelectItem value="10:00 AM">10:00 AM</SelectItem>
-                      <SelectItem value="11:00 AM">11:00 AM</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="gate-q3" className="text-[11px] font-semibold text-muted-foreground uppercase">3. Weekly Rhythm Planning Day</Label>
-                  <Select value={q3Input} onValueChange={(v) => { setQ3Input(v); setVerificationError('') }}>
-                    <SelectTrigger id="gate-q3"><SelectValue placeholder="Select day" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Friday">Friday</SelectItem>
-                      <SelectItem value="Saturday">Saturday</SelectItem>
-                      <SelectItem value="Sunday">Sunday</SelectItem>
-                      <SelectItem value="Monday">Monday</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setVerificationStep('pin')} className="flex-1 font-semibold">
-                  Back
-                </Button>
-                <Button onClick={handleQuestionsSubmit} className="flex-1 font-semibold bg-primary text-primary-foreground">
-                  Unlock Schedule
-                </Button>
-              </div>
-            </div>
-          )}
-        </Card>
-      </div>
-    )
-  }
-
   const currentTemplate = plan.templates[activeTemplate] || plan.templates[0]
 
   return (
@@ -1346,6 +1271,14 @@ export function SchedulePlanner() {
                 <Clock className="h-3 w-3 mr-1" />
                 <InlineEdit value={plan.timeRange} onChange={v => updatePlan(p => ({ ...p, timeRange: v }))} className="text-xs" />
               </Badge>
+              <Button
+                onClick={() => setShowWizard(true)}
+                size="sm"
+                variant="outline"
+                className="h-8 gap-1 border-dashed border-primary/40 text-primary hover:bg-primary/5 cursor-pointer font-medium"
+              >
+                <Sparkles className="h-3.5 w-3.5" /> Wizard
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -1360,9 +1293,9 @@ export function SchedulePlanner() {
                     {plan.showWeeklyRhythm ? 'Hide' : 'Show'} Weekly Cards
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={lockSchedule}>
-                    <Lock className="h-4 w-4 mr-2 text-muted-foreground" />
-                    Lock Schedule
+                  <DropdownMenuItem onClick={() => setShowWizard(true)}>
+                    <Sparkles className="h-4 w-4 mr-2 text-primary animate-pulse" />
+                    Study Plan Wizard
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={resetPlan} className="text-destructive focus:text-destructive">
@@ -1683,6 +1616,62 @@ export function SchedulePlanner() {
             <DialogClose asChild><Button variant="outline" size="sm">Cancel</Button></DialogClose>
             <Button size="sm" onClick={addTemplate} disabled={!newTemplateName.trim()}>
               <Plus className="h-4 w-4 mr-1" /> Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Setup Wizard Dialog */}
+      <Dialog open={showWizard} onOpenChange={setShowWizard}>
+        <DialogContent className="sm:max-w-[460px] schedule-dialog-content">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Study Plan Setup Wizard
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground">
+              Answer a few questions to generate a customized, editable study plan.
+            </p>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Start Study Time</Label>
+                <Input type="time" value={wizardStart} onChange={e => setWizardStart(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">End Study Time</Label>
+                <Input type="time" value={wizardEnd} onChange={e => setWizardEnd(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Study Subjects / Focus Areas</Label>
+              <Input
+                value={wizardSubjects}
+                onChange={e => setWizardSubjects(e.target.value)}
+                placeholder="e.g. Maths, Physics, Coding, Revision (comma separated)"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                We will distribute these subjects dynamically across your schedule.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Main Goal / Target Topic</Label>
+              <Input
+                value={wizardGoal}
+                onChange={e => setWizardGoal(e.target.value)}
+                placeholder="e.g. Prepare for final exams or GATE 2027"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <DialogClose asChild>
+              <Button variant="outline" size="sm">Cancel</Button>
+            </DialogClose>
+            <Button size="sm" onClick={handleGenerateFromWizard}>
+              <Sparkles className="h-4 w-4 mr-1.5" /> Generate Plan
             </Button>
           </DialogFooter>
         </DialogContent>
