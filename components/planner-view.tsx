@@ -87,12 +87,19 @@ export function PlannerView({
     return () => clearInterval(interval);
   }, []);
 
-  // Set initial active tab
+  // Set initial active tab dynamically based on today's real-world day of the week from the Weekly Rhythm
   useEffect(() => {
     if (plan.dayTypes.length > 0 && !activeTabId) {
-      setActiveTabId(plan.dayTypes[0].id);
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const todayName = days[new Date().getDay()];
+      const todayRhythm = plan.weeklyRhythm.find(r => r.day.toLowerCase() === todayName.toLowerCase());
+      if (todayRhythm && plan.dayTypes.some(dt => dt.id === todayRhythm.dayTypeId)) {
+        setActiveTabId(todayRhythm.dayTypeId);
+      } else {
+        setActiveTabId(plan.dayTypes[0].id);
+      }
     }
-  }, [plan.dayTypes, activeTabId]);
+  }, [plan.dayTypes, plan.weeklyRhythm, activeTabId]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
