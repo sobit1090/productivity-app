@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
-  CheckSquare, BookOpen, BarChart3, Calendar,
+  CheckSquare, BookOpen, BarChart3, Calendar, CalendarClock,
   Clock, FileText, TrendingUp, Settings, Wallet,
 } from 'lucide-react'
 
@@ -13,6 +13,7 @@ const navItems = [
   { href: '/tasks', label: 'Tasks', icon: CheckSquare },
   { href: '/exams', label: 'Exams', icon: BookOpen },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
+  { href: '/schedule', label: 'Schedule', icon: CalendarClock },
   { href: '/study-sessions', label: 'Study Sessions', icon: Clock },
   { href: '/analytics', label: 'Analytics', icon: TrendingUp },
   { href: '/notes', label: 'Notes', icon: FileText },

@@ -123,3 +123,100 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ─── Schedule Planner Animations ──────────────────────────────── */
+
+@keyframes scheduleSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scheduleFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scheduleScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes schedulePulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50% { box-shadow: 0 0 16px 2px var(--glow-color, rgba(99, 102, 241, 0.15)); }
+}
+
+@keyframes scheduleSpin {
+  to { transform: rotate(360deg); }
+}
+
+.schedule-planner {
+  animation: scheduleFadeIn 0.4s ease-out;
+}
+
+.schedule-header {
+  animation: scheduleScaleIn 0.5s ease-out;
+}
+
+.schedule-block {
+  animation: scheduleSlideUp 0.4s ease-out both;
+}
+
+.schedule-tab {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.schedule-tab:hover {
+  transform: translateY(-1px);
+}
+
+.schedule-card {
+  animation: scheduleScaleIn 0.4s ease-out;
+}
+
+.schedule-dialog-content {
+  animation: scheduleScaleIn 0.25s ease-out;
+}
+
+.schedule-section-enter {
+  animation: scheduleSlideUp 0.5s ease-out;
+}
+
+.schedule-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid hsl(var(--muted));
+  border-top-color: hsl(var(--primary));
+  border-radius: 50%;
+  animation: scheduleSpin 0.7s linear infinite;
+}
+
+/* Hide scrollbar for tab overflow */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes schedulePulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--pulse-color, rgba(99, 102, 241, 0.4)); }
+  50% { box-shadow: 0 0 0 8px transparent; }
+}
+
+.schedule-pulse {
+  animation: schedulePulse 2s ease-in-out infinite;
+}
