@@ -33,6 +33,26 @@ function generateUid(): string {
   return Math.random().toString(36).slice(2, 9);
 }
 
+function isTimeBetween(current: string, start: string, end: string): boolean {
+  if (!current || !start || !end) return false;
+  
+  const toMins = (t: string) => {
+    const [h, m] = t.split(':').map(Number);
+    return (isNaN(h) ? 0 : h) * 60 + (isNaN(m) ? 0 : m);
+  };
+  
+  const cVal = toMins(current);
+  const sVal = toMins(start);
+  const eVal = toMins(end);
+
+  if (sVal <= eVal) {
+    return cVal >= sVal && cVal < eVal;
+  } else {
+    // Crosses midnight, e.g. 22:00 to 02:00
+    return cVal >= sVal || cVal < eVal;
+  }
+}
+
 function addMinutes(time: string, mins: number): string {
   const [h, m] = time.split(':').map(Number);
   const total = h * 60 + m + mins;
@@ -93,6 +113,10 @@ export function PlannerView({
 
   const activeDayType = plan.dayTypes.find((dt) => dt.id === activeTabId) || plan.dayTypes[0];
 
+  const activeBlock = activeDayType?.blocks.find((block) =>
+    currentTime ? isTimeBetween(currentTime, block.startTime, block.endTime) : false
+  );
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
@@ -101,9 +125,24 @@ export function PlannerView({
       const oldIndex = activeDayType.blocks.findIndex((block) => block.id === active.id);
       const newIndex = activeDayType.blocks.findIndex((block) => block.id === over.id);
 
+      // Keep original ordered times of the slots
+      const originalTimes = activeDayType.blocks.map(b => ({
+        startTime: b.startTime,
+        endTime: b.endTime
+      }));
+
+      // Reorder the block objects
       const reorderedBlocks = arrayMove(activeDayType.blocks, oldIndex, newIndex);
+
+      // Re-apply the original slot times to the reordered blocks
+      const finalBlocks = reorderedBlocks.map((block, idx) => ({
+        ...block,
+        startTime: originalTimes[idx].startTime,
+        endTime: originalTimes[idx].endTime
+      }));
+
       const updatedDayTypes = plan.dayTypes.map((dt) =>
-        dt.id === activeDayType.id ? { ...dt, blocks: reorderedBlocks } : dt
+        dt.id === activeDayType.id ? { ...dt, blocks: finalBlocks } : dt
       );
 
       onPlanChange({ ...plan, dayTypes: updatedDayTypes });
@@ -342,6 +381,43 @@ export function PlannerView({
         padding: '1.25rem',
         marginTop: '-1.5rem', // Pull up to meet focus header flush
       }} className="w-full">
+
+        {/* Active Block Alert Banner */}
+        {activeBlock && (
+          <div 
+            style={{
+              border: `1px solid ${COLORS[activeBlock.colorName]?.hex || '#7F77DD'}`,
+              background: COLORS[activeBlock.colorName]?.light || '#EEEDFE',
+              color: COLORS[activeBlock.colorName]?.dark || '#3C3489',
+              borderRadius: 'var(--border-radius-md)',
+              padding: '10px 14px',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px',
+            }}
+            className="flex flex-col sm:flex-row sm:items-center justify-between shadow-sm animate-pulse"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="flex h-2.5 w-2.5 rounded-full relative flex-shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: COLORS[activeBlock.colorName]?.hex }} />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ backgroundColor: COLORS[activeBlock.colorName]?.hex }} />
+              </span>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider flex-shrink-0">
+                Active Session:
+              </span>
+              <span className="text-[12px] font-bold truncate">
+                {activeBlock.name} ({activeBlock.startTime} – {activeBlock.endTime})
+              </span>
+            </div>
+            {activeBlock.description && (
+              <span className="text-[11px] opacity-80 truncate max-w-full sm:max-w-[300px]">
+                {activeBlock.description}
+              </span>
+            )}
+          </div>
+        )}
         
         {/* Column Subheader Row (Time | Session | Actions) */}
         {activeDayType && activeDayType.blocks.length > 0 && (

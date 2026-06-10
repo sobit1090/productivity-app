@@ -142,6 +142,11 @@ export function WeeklyTasks({ plan, onPlanChange }: TasksSectionProps) {
     onPlanChange({ ...plan, weeklyTasks: updatedTasks });
   };
 
+  const handleTaskDelete = (taskId: string) => {
+    const updatedTasks = plan.weeklyTasks.filter((t) => t.id !== taskId);
+    onPlanChange({ ...plan, weeklyTasks: updatedTasks });
+  };
+
   const handleAddTask = () => {
     const newId = generateUid();
     const newTask: WeeklyTask = {
@@ -243,20 +248,40 @@ export function WeeklyTasks({ plan, onPlanChange }: TasksSectionProps) {
                 </span>
               </div>
 
-              <span
-                style={{
-                  fontSize: '9px',
-                  fontWeight: 600,
-                  padding: '2px 6px',
-                  borderRadius: '9999px',
-                  backgroundColor: catColor.light,
-                  color: catColor.dark,
-                  border: `0.5px solid ${catColor.hex}`,
-                }}
-                className="flex-shrink-0"
-              >
-                {task.category || 'General'}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} className="flex-shrink-0">
+                <span
+                  style={{
+                    fontSize: '9px',
+                    fontWeight: 600,
+                    padding: '2px 6px',
+                    borderRadius: '9999px',
+                    backgroundColor: catColor.light,
+                    color: catColor.dark,
+                    border: `0.5px solid ${catColor.hex}`,
+                  }}
+                >
+                  {task.category || 'General'}
+                </span>
+                {task.done && (
+                  <button
+                    onClick={() => handleTaskDelete(task.id)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#ef4444',
+                      cursor: 'pointer',
+                      padding: '2px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                    className="hover:text-red-500 transition-colors"
+                    title="Delete task"
+                  >
+                    <i className="ti ti-trash" style={{ fontSize: 13 }} />
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}
