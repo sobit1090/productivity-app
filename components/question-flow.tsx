@@ -260,7 +260,7 @@ export function QuestionFlow({ initialAnswers, onComplete, onBack }: QuestionFlo
                 }}
               />
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {question.options?.map(opt => {
                   const selected = isMulti
                     ? ((answers.activities || []) as string[]).includes(opt.label)
