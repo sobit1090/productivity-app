@@ -60,9 +60,9 @@ export function TimeBlock({ block, index, onUpdate, onDelete, currentTime }: Tim
 
   const containerStyle: React.CSSProperties = {
     ...style,
-    border: isActive ? `1.5px solid ${colorConfig.hex}` : undefined,
-    boxShadow: isActive ? `0 0 14px ${colorConfig.hex}35` : undefined,
-    backgroundColor: isActive ? '#21211e' : undefined,
+    border: isActive ? '1.5px solid #ff7a00' : undefined,
+    boxShadow: isActive ? '0 0 16px rgba(255, 122, 0, 0.45)' : undefined,
+    backgroundColor: isActive ? 'var(--color-background-secondary)' : undefined,
   };
 
   const handleDelete = () => {
@@ -80,7 +80,7 @@ export function TimeBlock({ block, index, onUpdate, onDelete, currentTime }: Tim
       className={`group relative border border-solid rounded-[var(--border-radius-lg)] overflow-hidden mb-3 block-enter transition-all duration-200 ${
         isActive 
           ? 'border-transparent' 
-          : 'border-[var(--color-border-tertiary)] bg-[#1e1e1c] hover:bg-[#232321]'
+          : 'border-[var(--color-border-tertiary)] bg-[var(--color-background-primary)] hover:bg-[var(--color-background-secondary)]'
       }`}
     >
       <div className="flex items-stretch">
@@ -88,7 +88,7 @@ export function TimeBlock({ block, index, onUpdate, onDelete, currentTime }: Tim
         <div
           {...attributes}
           {...listeners}
-          className="flex items-center justify-center px-2.5 cursor-grab active:cursor-grabbing text-gray-500 hover:text-white bg-[rgba(255,255,255,0.01)] border-r border-solid border-[var(--color-border-tertiary)] transition-colors flex-shrink-0 touch-none"
+          className="flex items-center justify-center px-2.5 cursor-grab active:cursor-grabbing text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] bg-[rgba(255,255,255,0.01)] border-r border-solid border-[var(--color-border-tertiary)] transition-colors flex-shrink-0 touch-none"
           title="Drag to reorder"
         >
           <i className="ti ti-grip-vertical" style={{ fontSize: 15 }} />
@@ -115,7 +115,7 @@ export function TimeBlock({ block, index, onUpdate, onDelete, currentTime }: Tim
             style={{ minWidth: '135px' }}
             title="Click to edit timings"
           >
-            <span className="text-[13px] font-semibold text-white tracking-wide select-none">
+            <span className="text-[13px] font-semibold text-[var(--color-text-primary)] tracking-wide select-none">
               {displayTimeRange}
             </span>
           </div>
@@ -129,7 +129,7 @@ export function TimeBlock({ block, index, onUpdate, onDelete, currentTime }: Tim
                 onBlur={(e) => {
                   onUpdate({ ...block, name: e.currentTarget.innerText });
                 }}
-                className="font-semibold text-[14px] text-white outline-none focus:border-b focus:border-[#7F77DD] pb-0.5"
+                className="font-semibold text-[14px] text-[var(--color-text-primary)] outline-none focus:border-b focus:border-[#7F77DD] pb-0.5"
                 style={{ display: 'inline-block' }}
               >
                 {block.name}
@@ -163,20 +163,20 @@ export function TimeBlock({ block, index, onUpdate, onDelete, currentTime }: Tim
               onBlur={(e) => {
                 onUpdate({ ...block, description: e.currentTarget.innerText });
               }}
-              className="text-xs text-[#a1a1aa] outline-none min-h-[1.2em] mt-1"
+              className="text-xs text-[var(--color-text-secondary)] outline-none min-h-[1.2em] mt-1"
             >
               {block.description}
             </div>
           </div>
 
           {/* Actions: absolute top-right on mobile, vertical centered right on desktop */}
-          <div className="absolute right-3.5 top-3 sm:top-1/2 sm:-translate-y-1/2 flex items-center gap-3 text-gray-400">
+          <div className="absolute right-3.5 top-3 sm:top-1/2 sm:-translate-y-1/2 flex items-center gap-3 text-[var(--color-text-secondary)]">
             <button
               onClick={() => {
                 setShowEditBar(!showEditBar);
                 setShowDeleteConfirm(false);
               }}
-              className="hover:text-white transition-colors cursor-pointer"
+              className="hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
               title="Edit block properties & color"
             >
               <i className="ti ti-edit" style={{ fontSize: 16 }} />
@@ -194,9 +194,9 @@ export function TimeBlock({ block, index, onUpdate, onDelete, currentTime }: Tim
 
       {/* Inline Edit Bar */}
       {showEditBar && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 border-t border-solid border-[var(--color-border-tertiary)] bg-[#171716]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 border-t border-solid border-[var(--color-border-tertiary)] bg-[var(--color-background-secondary)]">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-[#9a9892]">Block Accent:</span>
+            <span className="text-xs text-[var(--color-text-secondary)]">Block Accent:</span>
             <div className="flex items-center gap-2 flex-wrap">
               {COLOR_LIST.map((color) => {
                 const isSelected = block.colorName === color.name;
@@ -220,19 +220,19 @@ export function TimeBlock({ block, index, onUpdate, onDelete, currentTime }: Tim
           </div>
           
           <div className="flex items-center gap-2">
-            <span className="text-xs text-[#9a9892]">Duration:</span>
+            <span className="text-xs text-[var(--color-text-secondary)]">Duration:</span>
             <input
               type="time"
               value={block.startTime}
               onChange={(e) => onUpdate({ ...block, startTime: e.target.value })}
-              className="text-xs px-2.5 py-1 border border-solid border-gray-700 rounded bg-[#222] text-white focus:outline-none w-[90px] cursor-pointer"
+              className="text-xs px-2.5 py-1 border border-solid border-[var(--color-border-secondary)] rounded bg-[var(--color-background-primary)] text-[var(--color-text-primary)] focus:outline-none w-[90px] cursor-pointer"
             />
-            <span className="text-xs text-[#9a9892]">to</span>
+            <span className="text-xs text-[var(--color-text-secondary)]">to</span>
             <input
               type="time"
               value={block.endTime}
               onChange={(e) => onUpdate({ ...block, endTime: e.target.value })}
-              className="text-xs px-2.5 py-1 border border-solid border-gray-700 rounded bg-[#222] text-white focus:outline-none w-[90px] cursor-pointer"
+              className="text-xs px-2.5 py-1 border border-solid border-[var(--color-border-secondary)] rounded bg-[var(--color-background-primary)] text-[var(--color-text-primary)] focus:outline-none w-[90px] cursor-pointer"
             />
           </div>
 

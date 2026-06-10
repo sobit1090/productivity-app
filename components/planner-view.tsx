@@ -225,7 +225,7 @@ export function PlannerView({
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: 1000, margin: '2rem auto', padding: '0 1rem' }}>
       {/* 1. Premium Header Panel */}
       <div style={{
-        background: '#1e1e1c',
+        background: 'var(--color-background-primary)',
         border: '0.5px solid var(--color-border-tertiary)',
         borderTop: `4px solid ${COLORS[activeDayType?.accentColor || 'purple']?.hex || '#7F77DD'}`,
         borderRadius: 'var(--border-radius-lg)',
@@ -238,14 +238,14 @@ export function PlannerView({
               type="text"
               value={plan.title}
               onChange={(e) => onPlanChange({ ...plan, title: e.target.value })}
-              className="text-lg md:text-xl font-bold bg-transparent text-white w-full border-b border-transparent focus:border-[#7F77DD] focus:outline-none py-0.5"
+              className="text-lg md:text-xl font-bold bg-transparent text-[var(--color-text-primary)] w-full border-b border-transparent focus:border-[#7F77DD] focus:outline-none py-0.5"
               placeholder="Plan Title"
             />
             <input
               type="text"
               value={plan.subtitle}
               onChange={(e) => onPlanChange({ ...plan, subtitle: e.target.value })}
-              className="text-xs md:text-sm text-gray-400 bg-transparent w-full border-b border-transparent focus:border-[#7F77DD] focus:outline-none mt-1.5 py-0.5"
+              className="text-xs md:text-sm text-[var(--color-text-secondary)] bg-transparent w-full border-b border-transparent focus:border-[#7F77DD] focus:outline-none mt-1.5 py-0.5"
               placeholder="Plan Subtitle"
             />
           </div>
@@ -260,7 +260,7 @@ export function PlannerView({
 
             <button
               onClick={() => setPopupMessage('PDF export is coming soon!')}
-              className="px-3.5 py-1.5 text-xs font-semibold border border-solid border-gray-700 hover:border-gray-500 rounded-lg bg-[#1e1e1c] text-white hover:bg-[#252523] cursor-pointer transition-colors flex items-center gap-1.5"
+              className="px-3.5 py-1.5 text-xs font-semibold border border-solid border-[var(--color-border-secondary)] hover:border-gray-500 rounded-lg bg-[var(--color-background-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-background-secondary)] cursor-pointer transition-colors flex items-center gap-1.5"
             >
               <i className="ti ti-download" style={{ fontSize: 14 }} />
               Export PDF
@@ -268,7 +268,7 @@ export function PlannerView({
 
             <button
               onClick={handleEditHeaderClick}
-              className="px-3.5 py-1.5 text-xs font-semibold border border-solid border-gray-700 hover:border-gray-500 rounded-lg bg-[#1e1e1c] text-white hover:bg-[#252523] cursor-pointer transition-colors flex items-center gap-1.5"
+              className="px-3.5 py-1.5 text-xs font-semibold border border-solid border-[var(--color-border-secondary)] hover:border-gray-500 rounded-lg bg-[var(--color-background-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-background-secondary)] cursor-pointer transition-colors flex items-center gap-1.5"
             >
               <i className="ti ti-edit" style={{ fontSize: 14 }} />
               Edit header
@@ -276,7 +276,7 @@ export function PlannerView({
 
             <button
               onClick={onRegenerate}
-              className="px-3.5 py-1.5 text-xs font-semibold border border-solid border-gray-700 hover:border-gray-500 rounded-lg bg-[#1e1e1c] text-white hover:bg-[#252523] cursor-pointer transition-colors flex items-center gap-1.5"
+              className="px-3.5 py-1.5 text-xs font-semibold border border-solid border-[var(--color-border-secondary)] hover:border-gray-500 rounded-lg bg-[var(--color-background-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-background-secondary)] cursor-pointer transition-colors flex items-center gap-1.5"
             >
               <i className="ti ti-refresh" style={{ fontSize: 14 }} />
               Regenerate
@@ -284,7 +284,7 @@ export function PlannerView({
 
             <button
               onClick={() => setShowRestartConfirm(true)}
-              className="px-3.5 py-1.5 text-xs font-semibold border border-solid border-red-900 rounded-lg bg-red-950/20 text-red-400 hover:bg-red-950/40 cursor-pointer transition-colors flex items-center gap-1.5"
+              className="px-3.5 py-1.5 text-xs font-semibold border border-solid border-red-950 rounded-lg bg-red-950/20 text-red-400 hover:bg-red-950/40 cursor-pointer transition-colors flex items-center gap-1.5"
             >
               <i className="ti ti-power" style={{ fontSize: 14 }} />
               Restart
@@ -323,7 +323,7 @@ export function PlannerView({
 
         <button
           onClick={handleAddDayType}
-          className="px-4 py-1.5 text-xs font-semibold rounded-lg border border-dashed border-gray-700 text-gray-400 hover:text-white hover:border-gray-500 bg-[#1e1e1c] cursor-pointer transition-colors flex items-center gap-1 flex-shrink-0"
+          className="px-4 py-1.5 text-xs font-semibold rounded-lg border border-dashed border-[var(--color-border-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] bg-[var(--color-background-primary)] cursor-pointer transition-colors flex items-center gap-1 flex-shrink-0"
         >
           <i className="ti ti-plus" style={{ fontSize: 11 }} />
           Add day type
@@ -374,7 +374,7 @@ export function PlannerView({
 
       {/* 4. Timetable Cards Container (Flush below the focus header bar) */}
       <div style={{
-        background: '#151514',
+        background: 'var(--color-background-secondary)',
         border: '0.5px solid var(--color-border-tertiary)',
         borderRadius: '0 0 var(--border-radius-lg) var(--border-radius-lg)',
         borderTop: 'none',
@@ -425,13 +425,13 @@ export function PlannerView({
             style={{
               display: 'flex',
               alignItems: 'center',
-              backgroundColor: '#1b1b1a',
+              backgroundColor: 'var(--color-background-primary)',
               borderBottom: '1.5px solid var(--color-border-tertiary)',
               padding: '8px 16px',
               marginBottom: '12px',
               borderRadius: 'var(--border-radius-md)'
             }}
-            className="text-[11px] font-bold text-gray-400 uppercase tracking-wider hidden sm:flex"
+            className="text-[11px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider hidden sm:flex"
           >
             {/* Grip handle spacer */}
             <div style={{ width: '30px' }} className="flex-shrink-0" />
@@ -471,7 +471,7 @@ export function PlannerView({
                   <div className="flex justify-center -my-1.5 relative z-10 group/btn">
                     <button
                       onClick={() => insertBlock(idx)}
-                      className="px-2.5 py-0.5 text-[10px] font-semibold border border-dashed border-gray-700 bg-[#1e1e1c] text-gray-400 hover:text-white rounded-md opacity-0 group-hover/btn:opacity-100 focus:opacity-100 hover:border-gray-500 transition-opacity cursor-pointer flex items-center gap-1"
+                      className="px-2.5 py-0.5 text-[10px] font-semibold border border-dashed border-[var(--color-border-secondary)] bg-[var(--color-background-primary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-md opacity-0 group-hover/btn:opacity-100 focus:opacity-100 hover:border-gray-500 transition-opacity cursor-pointer flex items-center gap-1"
                     >
                       <i className="ti ti-plus" style={{ fontSize: 9 }} />
                       Insert activity
@@ -509,7 +509,7 @@ export function PlannerView({
         <div className="flex justify-center mt-3 mb-1">
           <button
             onClick={addBlockAtBottom}
-            className="px-5 py-2 border border-dashed border-gray-700 hover:border-[#7F77DD] bg-[#1e1e1c] text-[#a1a1aa] hover:text-white rounded-full text-xs font-semibold cursor-pointer transition-colors flex items-center gap-1.5"
+            className="px-5 py-2 border border-dashed border-[var(--color-border-secondary)] hover:border-[#7F77DD] bg-[var(--color-background-primary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-full text-xs font-semibold cursor-pointer transition-colors flex items-center gap-1.5"
           >
             <i className="ti ti-plus" style={{ fontSize: 12 }} />
             add block
