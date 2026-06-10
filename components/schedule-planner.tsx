@@ -1088,7 +1088,17 @@ export function SchedulePlanner() {
     try {
       const raw = localStorage.getItem(userStorageKey)
       if (raw) {
-        setPlan(JSON.parse(raw))
+        const parsed = JSON.parse(raw)
+        // If this is the B.Tech CSE plan but the user is not the owner (sg902266@gmail.com), force reset it to empty
+        if (
+          parsed.title === 'B.Tech CSE Graduate' &&
+          user?.email?.toLowerCase() !== 'sg902266@gmail.com'
+        ) {
+          setPlan(createEmptyPlan())
+          setShowWizard(true)
+        } else {
+          setPlan(parsed)
+        }
       } else {
         if (user?.email?.toLowerCase() === 'sg902266@gmail.com') {
           setPlan(createDefaultPlan())
