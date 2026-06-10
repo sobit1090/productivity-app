@@ -44,7 +44,7 @@ export function WeeklyRhythm({ plan, onPlanChange }: RhythmSectionProps) {
         </span>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3 w-full">
         {plan.weeklyRhythm.map((day) => {
           const dayType = plan.dayTypes.find((dt) => dt.id === day.dayTypeId) || plan.dayTypes[0];
           const dtAccentColor = dayType?.accentColor || 'gray';
@@ -53,66 +53,71 @@ export function WeeklyRhythm({ plan, onPlanChange }: RhythmSectionProps) {
           return (
             <div
               key={day.day}
-              className="border border-solid border-[var(--color-border-tertiary)] bg-[#1e1e1c] rounded-xl p-3 flex flex-col items-center justify-between text-center min-h-[96px] transition-all hover:border-gray-700"
+              className="border border-solid border-[var(--color-border-tertiary)] bg-[#1e1e1c] rounded-xl p-3 flex flex-row lg:flex-col items-center lg:justify-between justify-start gap-3 lg:gap-2 text-left lg:text-center min-h-[60px] lg:min-h-[120px] transition-all hover:border-gray-700 w-full"
             >
               {/* Day name (Mon, Tue, etc.) */}
-              <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-2">
+              <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider w-12 lg:w-auto flex-shrink-0">
                 {day.day.substring(0, 3)}
               </span>
 
               {/* Day type badge picker */}
-              {editingDayBadge === day.day ? (
-                <select
-                  value={day.dayTypeId}
-                  onChange={(e) => {
-                    handleRhythmDayTypeChange(day.day, e.target.value);
-                    setEditingDayBadge(null);
-                  }}
-                  onBlur={() => setEditingDayBadge(null)}
-                  autoFocus
-                  className="text-[10px] px-1 py-0.5 border border-solid border-gray-700 rounded bg-[#252523] text-white focus:outline-none w-full"
-                >
-                  {plan.dayTypes.map((dt) => (
-                    <option key={dt.id} value={dt.id}>
-                      {dt.name}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <button
-                  onClick={() => setEditingDayBadge(day.day)}
-                  className="px-2.5 py-0.5 text-[9px] font-bold rounded-full cursor-pointer transition-colors max-w-full truncate text-center"
-                  style={{
-                    backgroundColor: colorConfig.light,
-                    color: colorConfig.dark,
-                    border: `0.5px solid ${colorConfig.hex}`,
-                  }}
-                >
-                  {dayType?.name || 'Day'}
-                </button>
-              )}
+              <div className="flex-shrink-0">
+                {editingDayBadge === day.day ? (
+                  <select
+                    value={day.dayTypeId}
+                    onChange={(e) => {
+                      handleRhythmDayTypeChange(day.day, e.target.value);
+                      setEditingDayBadge(null);
+                    }}
+                    onBlur={() => setEditingDayBadge(null)}
+                    autoFocus
+                    className="text-[10px] px-1.5 py-0.5 border border-solid border-gray-700 rounded bg-[#252523] text-white focus:outline-none w-24 lg:w-full"
+                  >
+                    {plan.dayTypes.map((dt) => (
+                      <option key={dt.id} value={dt.id}>
+                        {dt.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <button
+                    onClick={() => setEditingDayBadge(day.day)}
+                    className="px-2.5 py-0.5 text-[9px] font-bold rounded-full cursor-pointer transition-colors max-w-full truncate text-center"
+                    style={{
+                      backgroundColor: colorConfig.light,
+                      color: colorConfig.dark,
+                      border: `0.5px solid ${colorConfig.hex}`,
+                    }}
+                  >
+                    {dayType?.name || 'Day'}
+                  </button>
+                )}
+              </div>
 
               {/* Topic display and input */}
-              {editingDayTopic === day.day ? (
-                <input
-                  type="text"
-                  defaultValue={day.topic}
-                  onBlur={(e) => {
-                    handleRhythmTopicChange(day.day, e.target.value);
-                    setEditingDayTopic(null);
-                  }}
-                  autoFocus
-                  className="text-[10px] text-center p-0.5 border border-solid border-gray-700 rounded bg-[#252523] text-white focus:outline-none w-full mt-2"
-                />
-              ) : (
-                <div
-                  onClick={() => setEditingDayTopic(day.day)}
-                  className="text-[11px] text-white font-medium mt-2 cursor-pointer hover:text-[#7F77DD] truncate w-full min-h-[14px]"
-                  title={day.topic}
-                >
-                  {day.topic || 'edit...'}
-                </div>
-              )}
+              <div className="flex-1 min-w-0 w-full">
+                {editingDayTopic === day.day ? (
+                  <input
+                    type="text"
+                    defaultValue={day.topic}
+                    onBlur={(e) => {
+                      handleRhythmTopicChange(day.day, e.target.value);
+                      setEditingDayTopic(null);
+                    }}
+                    autoFocus
+                    className="text-[10px] p-0.5 border border-solid border-gray-700 rounded bg-[#252523] text-white focus:outline-none w-full lg:text-center"
+                  />
+                ) : (
+                  <div
+                    onClick={() => setEditingDayTopic(day.day)}
+                    className="text-[11px] text-white font-medium cursor-pointer hover:text-[#7F77DD] hover:underline break-words lg:text-center w-full"
+                    style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}
+                    title={day.topic}
+                  >
+                    {day.topic || 'edit...'}
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}

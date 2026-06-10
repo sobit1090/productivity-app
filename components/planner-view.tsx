@@ -50,7 +50,22 @@ export function PlannerView({
 }: PlannerViewProps) {
   const [activeTabId, setActiveTabId] = useState<string>('');
   const [popupMessage, setPopupMessage] = useState<string | null>(null);
+  const [showRestartConfirm, setShowRestartConfirm] = useState(false);
+  const [currentTime, setCurrentTime] = useState<string>('');
   const titleInputRef = useRef<HTMLInputElement>(null);
+
+  // Track current real-world time for highlighting running activity blocks
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const hrs = String(now.getHours()).padStart(2, '0');
+      const mins = String(now.getMinutes()).padStart(2, '0');
+      setCurrentTime(`${hrs}:${mins}`);
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Set initial active tab
   useEffect(() => {
@@ -173,6 +188,7 @@ export function PlannerView({
       <div style={{
         background: '#1e1e1c',
         border: '0.5px solid var(--color-border-tertiary)',
+        borderTop: `4px solid ${COLORS[activeDayType?.accentColor || 'purple']?.hex || '#7F77DD'}`,
         borderRadius: 'var(--border-radius-lg)',
         padding: '1.5rem',
       }}>
@@ -228,7 +244,7 @@ export function PlannerView({
             </button>
 
             <button
-              onClick={onRestart}
+              onClick={() => setShowRestartConfirm(true)}
               className="px-3.5 py-1.5 text-xs font-semibold border border-solid border-red-900 rounded-lg bg-red-950/20 text-red-400 hover:bg-red-950/40 cursor-pointer transition-colors flex items-center gap-1.5"
             >
               <i className="ti ti-power" style={{ fontSize: 14 }} />
@@ -390,6 +406,7 @@ export function PlannerView({
                 <TimeBlock
                   block={block}
                   index={idx}
+                  currentTime={currentTime}
                   onUpdate={(updatedBlock) => {
                     const updatedBlocks = activeDayType.blocks.map((b) =>
                       b.id === block.id ? updatedBlock : b
@@ -534,6 +551,100 @@ export function PlannerView({
             >
               Got it
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 8. Restart Confirmation Modal Popup */}
+      {showRestartConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 100,
+          animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <div style={{
+            background: '#1e1e1c',
+            border: '0.5px solid var(--color-border-tertiary)',
+            borderRadius: 'var(--border-radius-lg)',
+            padding: '1.75rem',
+            maxWidth: 340,
+            width: '90%',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '1rem',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+            animation: 'scheduleScaleIn 0.2s ease-out'
+          }}>
+            <div style={{
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              backgroundColor: 'rgba(220, 38, 38, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ef4444'
+            }}>
+              <i className="ti ti-alert-triangle" style={{ fontSize: 24 }} />
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>Clear and Restart?</h3>
+              <p style={{ fontSize: 12, color: '#a1a1aa', lineHeight: 1.5 }}>
+                Are you sure you want to start over? Your current schedule and changes will be permanently cleared.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', width: '100%', marginTop: '0.5rem' }}>
+              <button
+                onClick={() => setShowRestartConfirm(false)}
+                style={{
+                  flex: 1,
+                  padding: '8px 16px',
+                  background: 'transparent',
+                  border: '0.5px solid var(--color-border-secondary)',
+                  borderRadius: 'var(--border-radius-md)',
+                  color: '#fff',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+                className="hover:bg-[#252523] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowRestartConfirm(false);
+                  onRestart();
+                }}
+                style={{
+                  flex: 1,
+                  padding: '8px 16px',
+                  background: '#ef4444',
+                  border: 'none',
+                  borderRadius: 'var(--border-radius-md)',
+                  color: '#fff',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+                className="hover:bg-red-700 transition-colors"
+              >
+                Start Over
+              </button>
+            </div>
           </div>
         </div>
       )}

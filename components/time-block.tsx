@@ -10,10 +10,33 @@ interface TimeBlockProps {
   index: number;
   onUpdate: (updatedBlock: TimeBlockType) => void;
   onDelete: () => void;
+  currentTime?: string;
 }
 
-export function TimeBlock({ block, index, onUpdate, onDelete }: TimeBlockProps) {
+function isTimeBetween(current: string, start: string, end: string): boolean {
+  if (!current || !start || !end) return false;
+  
+  const toMins = (t: string) => {
+    const [h, m] = t.split(':').map(Number);
+    return (isNaN(h) ? 0 : h) * 60 + (isNaN(m) ? 0 : m);
+  };
+  
+  const cVal = toMins(current);
+  const sVal = toMins(start);
+  const eVal = toMins(end);
+
+  if (sVal <= eVal) {
+    return cVal >= sVal && cVal < eVal;
+  } else {
+    // Crosses midnight, e.g. 22:00 to 02:00
+    return cVal >= sVal || cVal < eVal;
+  }
+}
+
+export function TimeBlock({ block, index, onUpdate, onDelete, currentTime }: TimeBlockProps) {
   const [showEditBar, setShowEditBar] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
   const {
     attributes,
     listeners,
@@ -31,13 +54,21 @@ export function TimeBlock({ block, index, onUpdate, onDelete }: TimeBlockProps) 
     animationDelay: `${index * 60}ms`,
   };
 
-  const handleDelete = () => {
-    if (confirm('Delete this block?')) {
-      onDelete();
-    }
-  };
+  const isActive = currentTime ? isTimeBetween(currentTime, block.startTime, block.endTime) : false;
 
   const colorConfig = COLORS[block.colorName] || COLORS.gray;
+
+  const containerStyle: React.CSSProperties = {
+    ...style,
+    border: isActive ? `1.5px solid ${colorConfig.hex}` : undefined,
+    boxShadow: isActive ? `0 0 14px ${colorConfig.hex}35` : undefined,
+    backgroundColor: isActive ? '#21211e' : undefined,
+  };
+
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+    setShowEditBar(false); // Hide edit bar if delete confirm is triggered
+  };
 
   // Format time display cleanly (e.g. 09:00 to 9:00 if needed, or display as is)
   const displayTimeRange = `${block.startTime}–${block.endTime}`;
@@ -45,8 +76,12 @@ export function TimeBlock({ block, index, onUpdate, onDelete }: TimeBlockProps) 
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className="group relative border border-solid border-[var(--color-border-tertiary)] bg-[#1e1e1c] hover:bg-[#232321] rounded-[var(--border-radius-lg)] overflow-hidden mb-3 block-enter transition-all duration-200"
+      style={containerStyle}
+      className={`group relative border border-solid rounded-[var(--border-radius-lg)] overflow-hidden mb-3 block-enter transition-all duration-200 ${
+        isActive 
+          ? 'border-transparent' 
+          : 'border-[var(--color-border-tertiary)] bg-[#1e1e1c] hover:bg-[#232321]'
+      }`}
     >
       <div className="flex items-stretch">
         {/* Drag handle */}
@@ -72,7 +107,10 @@ export function TimeBlock({ block, index, onUpdate, onDelete }: TimeBlockProps) 
         <div className="flex flex-col sm:flex-row flex-1 min-w-0 relative">
           {/* Time column (text display that toggles edit bar on click) */}
           <div 
-            onClick={() => setShowEditBar(!showEditBar)}
+            onClick={() => {
+              setShowEditBar(!showEditBar);
+              setShowDeleteConfirm(false);
+            }}
             className="flex items-center justify-start sm:justify-center px-5 py-3 sm:py-0 bg-[rgba(255,255,255,0.005)] border-b sm:border-b-0 sm:border-r border-solid border-[var(--color-border-tertiary)] flex-shrink-0 cursor-pointer hover:bg-[rgba(255,255,255,0.02)] transition-colors"
             style={{ minWidth: '135px' }}
             title="Click to edit timings"
@@ -84,15 +122,40 @@ export function TimeBlock({ block, index, onUpdate, onDelete }: TimeBlockProps) 
 
           {/* Body content */}
           <div className="flex-1 p-4 flex flex-col justify-center min-w-0 pr-16 sm:pr-16">
-            <div
-              contentEditable
-              suppressContentEditableWarning
-              onBlur={(e) => {
-                onUpdate({ ...block, name: e.currentTarget.innerText });
-              }}
-              className="font-semibold text-[14px] text-white outline-none focus:border-b focus:border-[#7F77DD] pb-0.5"
-            >
-              {block.name}
+            <div className="flex items-center flex-wrap gap-2">
+              <div
+                contentEditable
+                suppressContentEditableWarning
+                onBlur={(e) => {
+                  onUpdate({ ...block, name: e.currentTarget.innerText });
+                }}
+                className="font-semibold text-[14px] text-white outline-none focus:border-b focus:border-[#7F77DD] pb-0.5"
+                style={{ display: 'inline-block' }}
+              >
+                {block.name}
+              </div>
+              {isActive && (
+                <span 
+                  style={{
+                    backgroundColor: colorConfig.light,
+                    color: colorConfig.dark,
+                    border: `0.5px solid ${colorConfig.hex}`,
+                    borderRadius: '4px',
+                    padding: '1px 6px',
+                    fontSize: '9px',
+                    fontWeight: 750,
+                    textTransform: 'uppercase',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    letterSpacing: '0.05em',
+                  }}
+                  className="animate-pulse flex-shrink-0"
+                >
+                  <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: colorConfig.hex }} />
+                  Active Now
+                </span>
+              )}
             </div>
             <div
               contentEditable
@@ -109,7 +172,10 @@ export function TimeBlock({ block, index, onUpdate, onDelete }: TimeBlockProps) 
           {/* Actions: absolute top-right on mobile, vertical centered right on desktop */}
           <div className="absolute right-3.5 top-3 sm:top-1/2 sm:-translate-y-1/2 flex items-center gap-3 text-gray-400">
             <button
-              onClick={() => setShowEditBar(!showEditBar)}
+              onClick={() => {
+                setShowEditBar(!showEditBar);
+                setShowDeleteConfirm(false);
+              }}
               className="hover:text-white transition-colors cursor-pointer"
               title="Edit block properties & color"
             >
@@ -176,6 +242,32 @@ export function TimeBlock({ block, index, onUpdate, onDelete }: TimeBlockProps) 
           >
             Done
           </button>
+        </div>
+      )}
+
+      {/* Inline Delete Confirmation Bar */}
+      {showDeleteConfirm && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 border-t border-solid border-red-950 bg-red-950/10">
+          <span className="text-xs text-red-400 font-semibold">
+            Delete this activity? This cannot be undone.
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowDeleteConfirm(false)}
+              className="px-3 py-1 text-xs font-semibold border border-solid border-gray-700 bg-[#1e1e1c] hover:bg-[#252523] text-white rounded cursor-pointer transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                setShowDeleteConfirm(false);
+                onDelete();
+              }}
+              className="px-3 py-1 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white rounded cursor-pointer transition-colors"
+            >
+              Delete
+            </button>
+          </div>
         </div>
       )}
     </div>

@@ -29,10 +29,8 @@ export function PlannerApp() {
   }
 
   function handleRestart() {
-    if (confirm('Start over? Your current plan will be cleared.')) {
-      clearAll();
-      setScreen('welcome');
-    }
+    clearAll();
+    setScreen('welcome');
   }
 
   function handleRegenerate() {

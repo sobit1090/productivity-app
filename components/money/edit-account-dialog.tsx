@@ -28,6 +28,7 @@ export function EditAccountDialog({
   onClose: () => void
 }) {
   const [loading, setLoading] = useState(false)
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false)
   const [name, setName] = useState(account.name)
   const [balance, setBalance] = useState(account.balance ?? '0')
   const [creditLimit, setCreditLimit] = useState(account.creditLimit ?? '')
@@ -63,21 +64,8 @@ export function EditAccountDialog({
     }
   }
 
-  const handleDelete = async () => {
-    const typeLabel = account.type === 'credit_card' ? 'credit card' : 'bank account'
-    if (confirm(`Are you sure you want to delete this ${typeLabel} "${account.name}"? This will preserve transactions but remove the account from your lists.`)) {
-      setLoading(true)
-      try {
-        await deleteAccount(account.id)
-        toast.success(`${account.name} deleted!`)
-        onClose()
-        window.location.reload()
-      } catch {
-        toast.error('Failed to delete account')
-      } finally {
-        setLoading(false)
-      }
-    }
+  const handleDelete = () => {
+    setShowConfirmDelete(true)
   }
 
   return (
@@ -232,6 +220,50 @@ export function EditAccountDialog({
           </div>
         </form>
       </div>
+      {showConfirmDelete && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border border-destructive/30 bg-card p-6 shadow-2xl text-card-foreground space-y-4">
+            <h3 className="text-lg font-bold text-destructive flex items-center gap-2">
+              <Trash2 className="h-5 w-5 animate-pulse" /> Delete Account?
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Are you sure you want to delete this {account.type === 'credit_card' ? 'credit card' : 'bank account'} <strong className="text-foreground">"{account.name}"</strong>? This will preserve transactions but remove the account from your lists.
+            </p>
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowConfirmDelete(false)}
+                className="flex-1"
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={async () => {
+                  setLoading(true)
+                  try {
+                    await deleteAccount(account.id)
+                    toast.success(`${account.name} deleted!`)
+                    onClose()
+                    window.location.reload()
+                  } catch {
+                    toast.error('Failed to delete account')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                className="flex-1 gap-2"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Yes, Delete'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
