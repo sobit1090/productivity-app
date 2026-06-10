@@ -210,6 +210,41 @@ function createDefaultPlan(): SchedulePlan {
   }
 }
 
+function createEmptyPlan(): SchedulePlan {
+  return {
+    id: uid(),
+    title: 'My Schedule Plan',
+    subtitle: 'Customize your daily plan or use the Study Plan Wizard',
+    timeRange: '09:00 AM – 5:00 PM',
+    showWeeklyRhythm: true,
+    templates: [
+      {
+        id: 'day-a',
+        name: 'Day A',
+        subtitle: 'Concept Study & Practice',
+        color: '#6366f1',
+        blocks: [
+          { id: uid(), startTime: '09:00', endTime: '10:30', sessionName: 'Study Block 1', description: 'Enter description...', color: '#6366f1', icon: 'book', isBreak: false },
+          { id: uid(), startTime: '10:30', endTime: '10:45', sessionName: 'Short Break', description: '', color: '#64748b', icon: 'coffee', isBreak: true },
+          { id: uid(), startTime: '10:45', endTime: '12:15', sessionName: 'Study Block 2', description: 'Enter description...', color: '#3b82f6', icon: 'brain', isBreak: false },
+          { id: uid(), startTime: '12:15', endTime: '13:00', sessionName: 'Lunch Break', description: '', color: '#64748b', icon: 'coffee', isBreak: true },
+          { id: uid(), startTime: '13:00', endTime: '14:30', sessionName: 'Study Block 3', description: 'Enter description...', color: '#a855f7', icon: 'code', isBreak: false },
+          { id: uid(), startTime: '14:30', endTime: '15:00', sessionName: 'Daily Review', description: 'Review today\'s notes.', color: '#ec4899', icon: 'pencil', isBreak: false },
+        ],
+      }
+    ],
+    weeklyRhythm: [
+      { day: 'Monday', templateId: 'day-a', topic: 'Study Session 1' },
+      { day: 'Tuesday', templateId: 'day-a', topic: 'Study Session 2' },
+      { day: 'Wednesday', templateId: 'day-a', topic: 'Study Session 3' },
+      { day: 'Thursday', templateId: 'day-a', topic: 'Study Session 4' },
+      { day: 'Friday', templateId: 'day-a', topic: 'Study Session 5' },
+      { day: 'Saturday', templateId: 'day-a', topic: 'Revision & Coding' },
+      { day: 'Sunday', templateId: 'day-a', topic: 'Weekly Review' },
+    ],
+  }
+}
+
 // ─── Study Plan Setup Wizard Generator ──────────────────────────────────────────
 
 function generateScheduleFromWizard(
@@ -1055,10 +1090,19 @@ export function SchedulePlanner() {
       if (raw) {
         setPlan(JSON.parse(raw))
       } else {
-        setPlan(createDefaultPlan())
+        if (user?.email?.toLowerCase() === 'sg902266@gmail.com') {
+          setPlan(createDefaultPlan())
+        } else {
+          setPlan(createEmptyPlan())
+          setShowWizard(true)
+        }
       }
     } catch {
-      setPlan(createDefaultPlan())
+      if (user?.email?.toLowerCase() === 'sg902266@gmail.com') {
+        setPlan(createDefaultPlan())
+      } else {
+        setPlan(createEmptyPlan())
+      }
     }
     setLoaded(true)
   }, [user, sessionPending])
@@ -1220,7 +1264,12 @@ export function SchedulePlanner() {
   }
 
   const resetPlan = () => {
-    setPlan(createDefaultPlan())
+    if (user?.email?.toLowerCase() === 'sg902266@gmail.com') {
+      setPlan(createDefaultPlan())
+    } else {
+      setPlan(createEmptyPlan())
+      setShowWizard(true)
+    }
     setActiveTemplate(0)
     toast.success('Schedule reset to default')
   }
