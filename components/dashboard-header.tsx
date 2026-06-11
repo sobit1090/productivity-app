@@ -53,7 +53,18 @@ export function DashboardHeader() {
             </SheetTrigger>
             <SheetContent side="left" className="w-[280px] bg-card p-4">
               <SheetHeader className="mb-4">
-                <SheetTitle className="text-left text-xl font-bold">StudyFlow</SheetTitle>
+                <div className="flex items-center gap-2">
+                  <SheetTitle className="text-left text-xl font-bold">StudyFlow</SheetTitle>
+                  <span className="text-muted-foreground/30 text-lg select-none">|</span>
+                  <a 
+                    href="https://v0-developer-notebook-app.vercel.app/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xl font-bold text-muted-foreground hover:text-foreground hover:opacity-85 transition-colors"
+                  >
+                    Notebook
+                  </a>
+                </div>
               </SheetHeader>
               <nav className="flex flex-col gap-1">
                 {navItems.map(({ href, label, icon: Icon }) => (
@@ -86,6 +97,15 @@ export function DashboardHeader() {
 
           <Link href="/dashboard" className="text-xl font-bold text-foreground hover:opacity-85">
             StudyFlow
+          </Link>
+          <span className="text-muted-foreground/30 text-lg select-none">|</span>
+          <Link 
+            href="https://v0-developer-notebook-app.vercel.app/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-xl font-bold text-muted-foreground hover:text-foreground hover:opacity-85 transition-colors"
+          >
+            Notebook
           </Link>
         </div>
 
