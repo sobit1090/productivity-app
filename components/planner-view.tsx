@@ -71,6 +71,7 @@ export function PlannerView({
   const [activeTabId, setActiveTabId] = useState<string>('');
   const [popupMessage, setPopupMessage] = useState<string | null>(null);
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
+  const [dayToDelete, setDayToDelete] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState<string>('');
   const titleInputRef = useRef<HTMLInputElement>(null);
 
@@ -365,7 +366,7 @@ export function PlannerView({
                 <span
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDeleteDayType(dt.id);
+                    setDayToDelete(dt.id);
                   }}
                   style={{
                     cursor: 'pointer',
@@ -783,6 +784,102 @@ export function PlannerView({
                 className="hover:bg-red-700 transition-colors"
               >
                 Start Over
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 9. Delete Day Type Confirmation Modal Popup */}
+      {dayToDelete && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 100,
+          animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <div style={{
+            background: '#1e1e1c',
+            border: '0.5px solid var(--color-border-tertiary)',
+            borderRadius: 'var(--border-radius-lg)',
+            padding: '1.75rem',
+            maxWidth: 340,
+            width: '90%',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '1rem',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+            animation: 'scheduleScaleIn 0.2s ease-out'
+          }}>
+            <div style={{
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              backgroundColor: 'rgba(220, 38, 38, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ef4444'
+            }}>
+              <i className="ti ti-trash" style={{ fontSize: 24 }} />
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>
+                Delete {plan.dayTypes.find(dt => dt.id === dayToDelete)?.name || 'Day Type'}?
+              </h3>
+              <p style={{ fontSize: 12, color: '#a1a1aa', lineHeight: 1.5 }}>
+                Are you sure you want to delete this day type? Any scheduled days in your weekly rhythm using it will default to another day type.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', width: '100%', marginTop: '0.5rem' }}>
+              <button
+                onClick={() => setDayToDelete(null)}
+                style={{
+                  flex: 1,
+                  padding: '8px 16px',
+                  background: 'transparent',
+                  border: '0.5px solid var(--color-border-secondary)',
+                  borderRadius: 'var(--border-radius-md)',
+                  color: '#fff',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+                className="hover:bg-[#252523] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  handleDeleteDayType(dayToDelete);
+                  setDayToDelete(null);
+                }}
+                style={{
+                  flex: 1,
+                  padding: '8px 16px',
+                  background: '#ef4444',
+                  border: 'none',
+                  borderRadius: 'var(--border-radius-md)',
+                  color: '#fff',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+                className="hover:bg-red-700 transition-colors"
+              >
+                Delete
               </button>
             </div>
           </div>
