@@ -135,27 +135,6 @@ function WelcomeScreen({ onStart, onLoadSobitPlan }: { onStart: () => void; onLo
             <span>Build my schedule</span>
             <i className="ti ti-arrow-right" style={{ fontSize: 14 }} />
           </button>
-
-          <button
-            onClick={onLoadSobitPlan}
-            style={{
-              padding: '10px 20px',
-              background: 'transparent',
-              border: '1px solid var(--color-border-tertiary)',
-              borderRadius: 'var(--border-radius-md)',
-              color: 'var(--color-text-primary)',
-              fontSize: 13,
-              fontWeight: 500,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-            }}
-            className="hover:bg-[#7F77DD]/10 transition-colors"
-          >
-            <i className="ti ti-file-text" style={{ fontSize: 14 }} />
-            <span>Load Sobit's Plan (PDF)</span>
-          </button>
         </div>
       </div>
     </div>
