@@ -192,7 +192,13 @@ export function PlannerView({
   };
 
   const handleAddDayType = () => {
-    const char = String.fromCharCode(65 + plan.dayTypes.length); // C, D, E etc.
+    let charCode = 65; // Start from 'A'
+    let char = String.fromCharCode(charCode);
+    while (plan.dayTypes.some(dt => dt.id === `day-${char.toLowerCase()}` || dt.name.toLowerCase() === `day ${char.toLowerCase()}`)) {
+      charCode++;
+      char = String.fromCharCode(charCode);
+    }
+
     const newDayType: DayType = {
       id: `day-${char.toLowerCase()}`,
       name: `Day ${char}`,
@@ -215,6 +221,31 @@ export function PlannerView({
       dayTypes: [...plan.dayTypes, newDayType],
     });
     setActiveTabId(newDayType.id);
+  };
+
+  const handleDeleteDayType = (idToDelete: string) => {
+    if (plan.dayTypes.length <= 1) return;
+
+    const updatedDayTypes = plan.dayTypes.filter((dt) => dt.id !== idToDelete);
+    const firstRemainingId = updatedDayTypes[0].id;
+
+    // Update weekly rhythm references
+    const updatedWeeklyRhythm = plan.weeklyRhythm.map((r) => {
+      if (r.dayTypeId === idToDelete) {
+        return { ...r, dayTypeId: firstRemainingId };
+      }
+      return r;
+    });
+
+    onPlanChange({
+      ...plan,
+      dayTypes: updatedDayTypes,
+      weeklyRhythm: updatedWeeklyRhythm,
+    });
+
+    if (activeTabId === idToDelete) {
+      setActiveTabId(firstRemainingId);
+    }
   };
 
   const handleEditHeaderClick = () => {
@@ -315,15 +346,41 @@ export function PlannerView({
                 borderColor: colorConfig.hex,
                 color: '#fff',
                 fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
               } : {
                 backgroundColor: colorConfig.light,
                 borderColor: colorConfig.hex,
                 color: colorConfig.dark,
                 fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
               }}
               className="px-4 py-1.5 text-xs rounded-lg border border-solid transition-all cursor-pointer shadow-sm"
             >
-              {dt.name}
+              <span>{dt.name}</span>
+              {plan.dayTypes.length > 1 && (
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteDayType(dt.id);
+                  }}
+                  style={{
+                    cursor: 'pointer',
+                    opacity: 0.7,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginLeft: '2px',
+                  }}
+                  className="hover:opacity-100 hover:scale-125 transition-all"
+                  title={`Delete ${dt.name}`}
+                >
+                  <i className="ti ti-x" style={{ fontSize: 11, fontWeight: 'bold' }} />
+                </span>
+              )}
             </button>
           );
         })}
